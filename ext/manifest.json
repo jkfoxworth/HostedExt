@@ -33,6 +33,6 @@
     "js": ["src/js/jquery/jquery.js", "src/js/jquery-ui-1.12.1.custom/jquery-ui.js", "src/inject.js"]
   }],
   "externally_connectable": {
-    "matches": ["*://127.0.0.1/*", "*://localhost/*"]
+    "matches": ["*://127.0.0.1/*", "*://localhost/*", "*://estasney1.pythonanywhere.com/*"]
   }
 }
