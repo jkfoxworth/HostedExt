@@ -1,8 +1,6 @@
 // popup.js
-// popup.html will mimic background.html (this holds the data)
 
-// function that will ask background.js to get the name elements from the page.
-// Use callback to await response
+// Not-functional, reserving for future projects
 function askBackground() {
     chrome.runtime.sendMessage(
         {action: "ask"},

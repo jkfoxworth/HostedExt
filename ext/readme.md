@@ -1,40 +1,22 @@
-### This is my extension
+### Hermes
 
-1. Background.html
-  1. Show saved profiles
-  2. Option to export as .csv
+1. content_scripts
+  1. On each page matching a LinkedIn Recruiter Profile, inject the following:
+    1. Script to extract
+        1. Current URL
+        2. Raw HTML
+        3. Member ID
 
-2. content_scripts
-  1. On each page matching a LinkedIn Profile, inject the following
-    1. Button with "save profile"
-    2. CSS to style button
-  2. Event Listener for when button is clicked
-    1. Handle it by sending a message to background (js or html?) with the associated profile data.
+### Todo
 
-3. Action of clicked
-  1. Content scripts
-    1. Adds a Button
-      1. Listens for clicked
-    2. Fetches and passes data to Background
-  2. Background
-    1. Add listener for when content script returns something
+1. Popup
+    1. Script to fetch profiles associated with a checkbox
+        1. i.e. "Extract These"
+    2. Show extraction results
+    3. Receive file blob data from server
+
+2. DevTools
+    1. Listen for and parse relevant XHR
+    2. Pass XHR data to server  
 
 
-### Plan
-
-1. Write content script
-  1. [x] Inject a Button
-  2. [x] Style the Button
-  3. [x] Event listener
-  4. [x] Fetch data
-  5. Pass data
-    1. function returns data
-      1. where does it go?
-      
-
-2. Event listener for background
-
-### Snippets
-
-1. Inject code
-  1. Mimic the add to the clipboard

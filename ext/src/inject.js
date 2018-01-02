@@ -1,8 +1,8 @@
-// This will await the document response that it is complete
-// When can run this function as the top layer function
-// It will execute the callback when page is readyState
-// In this case the callback is a function to add a Button
+// inject.js
 
+// This will await the document response that it is complete
+// Calls callback function once page is loaded
+// Prevents running inject.js too early
 function pageStatus(callback) {
   setTimeout(function() {
     var x = document.readyState;
@@ -16,8 +16,9 @@ function pageStatus(callback) {
   }, 2000);
 }
 
-// This should not be called directly
-// Use as callback
+
+// This function can be used to append a button that calls clipIt()
+// Not currently used
 function addButton () {
   $("#topcard > div.module-body > div > div.profile-info").append("<button id='clipit'>Clip It</button>");
   console.log("Appending");
@@ -32,12 +33,17 @@ function addButton () {
   $("#clipit").on("click", clipIt);
 }
 
-// This is invoked from the clipit Button
+
+// Function that parses the data from the page
 
 function clipIt() {
+    // Member ID. Used as a global unique identifier
     var pid = $("#context-data-form > input[type='hidden']:nth-child(3)").attr("value");
+    // The raw_html from the relevant section of the page.
     var rhtml = $("#lira-profile")["0"].innerHTML;
+    // The url of the page
     var purl = window.location.href;
+    // Create an object with attributes
     var profile = {
         id: pid,
         purl: purl,
@@ -46,6 +52,7 @@ function clipIt() {
     if (profile) {
         chrome.runtime.sendMessage(
             // message - JSON
+            // Action is new_clip to ensure we use the correct background.js event listener
             {action: "new_clip", id: profile.id, purl: profile.purl, raw_html: profile.raw_html},
             // responseCallback
             function (response) {
@@ -55,5 +62,8 @@ function clipIt() {
     }
 }
 
-pageStatus(addButton);
+// Uncomment addButton to append a button to the page
+// pageStatus(addButton);
+
+// Comment to prevent running clipIt as soon as the page loads
 pageStatus(clipIt);
