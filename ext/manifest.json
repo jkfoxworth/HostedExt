@@ -1,0 +1,38 @@
+{
+  "name": "Profile Saver",
+  "version": "0.0.1",
+  "manifest_version": 2,
+  "description": "Percy",
+  "homepage_url": "http://extensionizr.com",
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "default_locale": "en",
+  "background": {
+    "scripts": ["src/js/jquery/jquery.js","src/background.js"],
+    "persistent": true
+  },
+  "browser_action": {
+    "default_icon": "icons/icon19.png",
+    "default_title": "browser action demo",
+    "default_popup": "src/popup.html",
+    "js": "src/js/jquery/jquery.js"
+  },
+  "permissions": [
+    "tabs",
+    "storage",
+    "https://www.linkedin.com/*",
+    "<all_urls>"
+  ],
+  "content_scripts": [{
+    "matches": [
+      "https://www.linkedin.com/*"
+    ],
+    "js": ["src/js/jquery/jquery.js", "src/js/jquery-ui-1.12.1.custom/jquery-ui.js", "src/inject.js"]
+  }],
+  "externally_connectable": {
+    "matches": ["*://127.0.0.1/*", "*://localhost/*"]
+  }
+}
