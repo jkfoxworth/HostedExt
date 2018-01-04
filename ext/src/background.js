@@ -17,6 +17,42 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
         }
 });
 
+// Event Listener that waits for popup.js to pass a list of URLS
+
+
+chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
+    if (request.action === "checked_profiles") {
+        // if it's passing a list of profiles
+        console.log("Received list of profiles");
+        // Call function postData
+        requestPages(request.checked);
+        // No sendResponse needed, send empty object
+        sendResponse();
+    }
+});
+
+function requestPages(checked_profiles){
+    // expect multiple pages
+    var page_results = [];
+    for (var i = 0; i < checked_profiles.length; i++) {
+        var i_page = checked_profiles[i];
+
+        // messaging
+
+        chrome.tabs.query({active: true, currentWindow: true}, function (tabs) {
+            chrome.tabs.sendMessage(
+                tabs[0].id, {action: "ajax_page", target: i_page},
+                // What to do with the response received
+                function (response) {
+                    page_results.push(response.content);
+                });
+        });
+    }
+
+
+}
+
+
 
 // Function that passes data from browser to specified url
 function postData(url, id, purl, raw_html) {

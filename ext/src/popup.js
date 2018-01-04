@@ -1,43 +1,25 @@
 // popup.js
 
-// Once popup.js opened, fetches all available search urls
+var port = chrome.runtime.connect({
+    name: 'popup > background'
+});
 
-// function fetchAllUrls() {
-//     base_domain = "https://www.linkedin.com";
-//     result_elements = $('.search-result-profile-link');
-//     links = [];
-//     for (var i=0; i < result_elements.length; i++) {
-//         el_link = result_elements[i].getAttribute('href');
-//         link_trimmed = base_domain + el_link.split("?")[0];
-//         links.push(link_trimmed)
-//     }
-//     return links
-// }
 
+// Sends message to the active tab
+// Passes a request to call script from inject.js
 function requestResults() {
-    // chrome.runtime.sendMessage(
-    //     // message - JSON
-    //     // Action is new_results to ensure we use the correct popup.js event listener
-    //     {action: "fetch_results"},
-    //     // responseCallback
-    //     function (response) {
-    //         console.log("Received response");
-    //     });
-
-    chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+    chrome.tabs.query({active: true, currentWindow: true}, function (tabs) {
         chrome.tabs.sendMessage(
             tabs[0].id, {action: "fetch_results"},
-            function(response) {
+            function (response) {
                 console.log(response);
-        });
+            });
     });
-
-
-
-
 }
 
-chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
+// Awaits a response from the extension
+// Awaits message from inject.js. Message contains SearchResults
+port.onMessage.addListener(function(request, sender, sendResponse) {
     if (request.action === "new_results") {
         // if it's passing in new results...
         console.log("New results received");
@@ -48,43 +30,8 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     }
 });
 
-
-// // Object Constructor for Search Results
-// function SearchResult(fullName, profile_url, job_title_employer, metro_location, picture_url) {
-//     this.fullName = fullName;
-//     this.profile_url = profile_url;
-//     this.job_title_employer = job_title_employer;
-//     this.metro_location = metro_location;
-//     this.picture_url = picture_url;
-// }
-
-// // Get the search results as an array of SearchResult objects
-// function fetchResultData(callback) {
-//     var profile_elements = $('.search-result');
-//     var results = [];
-//
-//     for (var i = 0; i < profile_elements.length; i++) {
-//         var i_element = profile_elements[i];
-//         var fullname = i_element.querySelector(".search-result-profile-link").text;
-//         var profile_url = i_element.querySelector(".search-result-profile-link").getAttribute("href");
-//         var job_title = function (i_element) {
-//             // If no job title, use headline
-//             var current_job_element = i_element.querySelector(".curr-positions li:nth-child(1)");
-//             if (current_job_element === null) {
-//                 current_job_element = i_element.querySelector('.headline');
-//             }
-//             var job_text = current_job_element.innerHTML.split("<span")[0];
-//             return job_text
-//         };
-//         var metro_location = i_element.querySelector('.location span:nth-child(1)').textContent;
-//         var picture_url = i_element.querySelector('.profile-img').getAttribute('src');
-//
-//         var new_person = new SearchResult(fullname, profile_url, job_title(i_element), metro_location, picture_url);
-//         results.push(new_person);
-//     }
-//     callback(results);
-// }
-
+// Receives SearchResult object from inject.js
+// Generates HTML on popup.html from objects
 function styleResults(SearchResults){
 
     for (var i = 0; i < SearchResults.length; i++) {
@@ -99,11 +46,10 @@ function styleResults(SearchResults){
         }).appendTo('#people_holder');
 
         $("<input/>", {
-            'type': 'checkbox',
-            'checked': ''
-        }).appendTo(i_selector);
+            'type': 'checkbox'
+        }).prop('checked', true).appendTo(i_selector);
 
-        $("<div/>", {
+        $("<a/>", {
             'class': 'person_name',
             'text' : i_result.fullName,
             'href': i_result.profile_url
@@ -125,6 +71,53 @@ function styleResults(SearchResults){
         }).appendTo(i_selector);
 
     }
+    allowExtraction();
+}
+
+// After styleResults is called, make Begin Extraction Available
+
+function allowExtraction() {
+    $("<button/>", {
+        'id': 'extract',
+        'text': 'Begin Extraction'
+    }).appendTo('#buttonDiv').addEventListener('click', makeExtractList);
+}
+
+
+function cleanURL(old_url) {
+    var newURL = "https://www.linkedin.com/recruiter/profile/";
+    var profile_pointer = old_url.split("?")[0].split("profile/")[1];
+    newURL = newURL + profile_pointer;
+    return newURL;
+}
+
+// Gets the URLS the user has selected
+// These are passed to background.js
+
+function makeExtractList (){
+    // Generate array of URL's that have checkmark
+    var checked_profiles = [];
+    var popup_profiles = $("#people_holder").find("div");
+    var popup_checkboxes = $("input");
+    var popup_name_links = $("a.person_name");
+
+    for (var i = 0; i < popup_profiles.length; i++) {
+        var i_profile = popup_profiles[i];
+        var i_checkbox = popup_checkboxes.eq(i);
+        if (i_checkbox.prop('checked') === true) {
+            // if checkbox is checked
+            // get the url so we can make a request
+            var i_url = cleanURL(popup_name_links.eq(i).prop('href'));
+            checked_profiles.push(i_url);
+        }
+    }
+    sendPageList(checked_profiles);
+}
+
+
+// Function that passes checked URLs
+function sendPageList(checked_profiles) {
+    port.postMessage({action: "checked_profiles", checked:checked_profiles});
 }
 // Function that handles button
 
@@ -133,5 +126,5 @@ function handleButton() {
     requestResults();
 }
 
-// Event listener that listens for button being clicked from popup
-document.getElementById('clickme').addEventListener('click', handleButton);
+// Event listener that listens for list button being clicked
+document.getElementById('list').addEventListener('click', handleButton);

@@ -16,25 +16,7 @@ function pageStatus(callback) {
   }, 2000);
 }
 
-
-// This function can be used to append a button that calls clipIt()
-// Not currently used
-function addButton () {
-  $("#topcard > div.module-body > div > div.profile-info").append("<button id='clipit'>Clip It</button>");
-  console.log("Appending");
-  $("#clipit").button();
-  $("#clipit").css({
-    'margin-left': 'auto',
-    'margin-right': 'auto',
-    'font-size': '14px',
-    'width': '240px',
-    'height': '20px'
-  });
-  $("#clipit").on("click", clipIt);
-}
-
-
-// Function that parses the data from the page
+// Function that parses the data from the profile page when directly navigated
 
 function clipIt() {
     // Member ID. Used as a global unique identifier
@@ -62,8 +44,8 @@ function clipIt() {
     }
 }
 
-// Function for parsing page results
 
+// Constructor for Search Results
 function SearchResult(fullName, profile_url, job_title_employer, metro_location, picture_url) {
     this.fullName = fullName;
     this.profile_url = profile_url;
@@ -72,6 +54,7 @@ function SearchResult(fullName, profile_url, job_title_employer, metro_location,
     this.picture_url = picture_url;
 }
 
+// Function for parsing page results from search page
 function fetchResultData(callback) {
     var profile_elements = $('.search-result');
     var results = [];
@@ -98,6 +81,25 @@ function fetchResultData(callback) {
     callback(results);
 }
 
+function profileAjax(target_url){
+    $.ajax({
+        type: 'GET',
+        async: true,
+        timeout: 10000,
+        url: target_url,
+        beforeSend : function(xhr) {
+            xhr.setRequestHeader('Accept', 'application/json, text/javascript, */*; q=0.01');
+            xhr.setRequestHeader('Accept-Language', 'en-US,en;q=0.8');
+            xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+        },
+        success: function (data) {
+            console.log(data);
+            return(data);
+        }})
+}
+
+
+// Sending search results to popup.js
 function sendResults(ResultData) {
     chrome.runtime.sendMessage(
             // message - JSON
@@ -110,17 +112,15 @@ function sendResults(ResultData) {
             });
     }
 
-
-
-// Uncomment addButton to append a button to the page
-// pageStatus(addButton);
-
 // Determine what page url is and run appropriate script
 
 var current_url = window.location.href;
+
 if (current_url.indexOf("profile") >= 0) {
+    // Page is profile
     pageStatus(clipIt);
 } else if(current_url.indexOf("smartsearch") >= 0) {
+    // Search results page
     chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
         if (request.action === "fetch_results") {
             // if it's passing in new data...
@@ -129,6 +129,8 @@ if (current_url.indexOf("profile") >= 0) {
             fetchResultData(sendResults);
             // No sendResponse needed, send empty object
             sendResponse();
+        } else if (request.action === 'ajax_page') {
+            profileAjax(request.target);
         }
     });
 }
