@@ -81,7 +81,7 @@ function fetchResultData(callback) {
     callback(results);
 }
 
-function profileAjax(target_url){
+function profileAjax(target_url, callback){
     $.ajax({
         type: 'GET',
         async: true,
@@ -93,10 +93,11 @@ function profileAjax(target_url){
             xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
         },
         success: function (data) {
-            console.log(data);
-            return(data);
+            callback(data)
         }})
 }
+
+
 
 
 // Sending search results to popup.js
@@ -112,6 +113,16 @@ function sendResults(ResultData) {
             });
     }
 
+function sendAjaxProfile(profile_data){
+    chrome.runtime.sendMessage(
+        {action: "fetched_page", data:profile_data},
+        function (response) {
+            console.log("Sent Profile Data");
+        });
+    }
+
+
+
 // Determine what page url is and run appropriate script
 
 var current_url = window.location.href;
@@ -123,14 +134,21 @@ if (current_url.indexOf("profile") >= 0) {
     // Search results page
     chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
         if (request.action === "fetch_results") {
-            // if it's passing in new data...
+            // if it's requesting results on page.
             console.log("Results Requested");
             // Call function postData
             fetchResultData(sendResults);
             // No sendResponse needed, send empty object
             sendResponse();
         } else if (request.action === 'ajax_page') {
-            profileAjax(request.target);
+            // Use callback
+
+            profileAjax(request.target, function (data){
+                sendAjaxProfile(data);
+            })
+
+
+
         }
     });
 }

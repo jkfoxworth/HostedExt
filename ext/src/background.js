@@ -6,6 +6,7 @@
 var url = "http://estasney1.pythonanywhere.com/api/v1/profiles";
 
 // Event listener that waits for message received from inject.js
+// Data is from profile page
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     if (request.action === "new_clip") {
         // if it's passing in new data...
@@ -17,8 +18,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
         }
 });
 
-// Event Listener that waits for popup.js to pass a list of URLS
-
+// Event Listener that waits for popup.js to pass a list of Urls
 
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     if (request.action === "checked_profiles") {
@@ -48,6 +48,9 @@ function requestPages(checked_profiles){
                 });
         });
     }
+    console.log(page_results);
+
+    // once complete pass page results to popup.js to display in popup.html
 
 
 }
