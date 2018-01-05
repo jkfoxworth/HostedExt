@@ -1,8 +1,5 @@
 // popup.js
 
-
-
-
 // Sends message to the active tab
 // Passes a request to call script from inject.js
 function requestResults() {
@@ -30,6 +27,11 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
         console.log(request.data);
     }
 });
+
+function styleAjax(data){
+
+}
+
 
 // Receives SearchResult object from inject.js
 // Generates HTML on popup.html from objects
@@ -112,8 +114,11 @@ function makeExtractList (){
             var i_url = cleanURL(popup_name_links.eq(i).prop('href'));
             checked_profiles.push(i_url);
         }
+        // only send list when complete
+        if (i === popup_profiles.length - 1) {
+            sendPageList(checked_profiles);
+        }
     }
-    sendPageList(checked_profiles);
 }
 
 

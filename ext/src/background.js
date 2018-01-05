@@ -8,7 +8,7 @@ var url = "http://estasney1.pythonanywhere.com/api/v1/profiles";
 // Event listener that waits for message received from inject.js
 // Data is from profile page
 
-chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
+chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     if (request.action === "new_clip") {
         // if it's passing in new data...
         console.log("New message received");
@@ -16,12 +16,12 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
         postData(url, request.id, request.purl, request.raw_html);
         // No sendResponse needed, send empty object
         sendResponse();
-        }
+    }
 });
 
 
 // Event Listener that waits for popup.js to pass a list of Urls
-chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
+chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     if (request.action === "checked_profiles") {
         // if it's passing a list of profiles
         console.log("Received list of profiles");
@@ -32,37 +32,40 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 });
 
 
-
-function dataToPopup(response) {
+function dataToPopup(response, counter, urls) {
+    var end_counter = urls.length;
     chrome.runtime.sendMessage(
-        {action: "new_ajax", data:response},
+        {action: "new_ajax", data: response},
         // responseCallback
         function (response) {
-            });
+        });
+
+    // Call requestPages as soon as message is sent
+    counter++;
+    if (counter < end_counter) {
+        requestPages(counter, urls);
+    } else {
+        console.log("Done with AJAX Pages");
+    }
+
 }
 
-function requestPages(counter, urls){
+function requestPages(counter, urls) {
     var url_length = url.length;
-    if (counter < url_length) {
-        setTimeout(function() {
-            chrome.tabs.query({}, function (tabs) {
-                chrome.tabs.sendMessage(tabs[0].id, {action: 'get_page', target: urls[counter]}, function (response) {
-                    console.log("Response from inject");
-                    console.log(response);
-                    dataToPopup(response);
-                });
-            });
-        }, 5000);
-        counter ++;
-        requestPages(counter, urls);
-        }
+    chrome.tabs.query({}, function (tabs) {
+        chrome.tabs.sendMessage(tabs[0].id, {action: 'get_page', target: urls[counter]}, function (response) {
+            console.log("Received AJAX from Inject");
+            dataToPopup(response);
+        });
+    });
 }
+
 
 // Function that passes data from browser to specified url
 function postData(url, id, purl, raw_html) {
     var xhttp;
-    xhttp=new XMLHttpRequest();
-    xhttp.onreadystatechange = function() {
+    xhttp = new XMLHttpRequest();
+    xhttp.onreadystatechange = function () {
         if (this.readyState === 4 && this.status === 200) {
             console.log("Message success");
         }
