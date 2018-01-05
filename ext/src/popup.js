@@ -25,6 +25,9 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
         styleResults(request.results);
         // No sendResponse needed, send empty object
         sendResponse();
+    } else if (request.action === 'new_ajax') {
+        console.log("Got Ajax");
+        console.log(request.data);
     }
 });
 
@@ -78,7 +81,8 @@ function allowExtraction() {
     $("<button/>", {
         'id': 'extract',
         'text': 'Begin Extraction'
-    }).appendTo('#buttonDiv').addEventListener('click', makeExtractList);
+    }).appendTo('#buttonDiv');
+    document.querySelector("#extract").addEventListener('click', makeExtractList);
 }
 
 
@@ -114,19 +118,15 @@ function makeExtractList (){
 
 
 // Function that passes checked URLs
-function sendPageList(checked_profiles) {
-
-    chrome.tabs.query({active: true, currentWindow: true}, function (tabs) {
-        chrome.tabs.sendMessage(
-            tabs[0].id, {action: "checked_profiles", checked:checked_profiles},
-            function (response) {
-                console.log(response);
-            });
-    });
-
-
-
-
+function sendPageList(checked_profiles)  {
+    chrome.runtime.sendMessage(
+        // message - JSON
+        // Action is new_clip to ensure we use the correct background.js event listener
+        {action: "checked_profiles", checked:checked_profiles},
+        // responseCallback
+        function (response) {
+            console.log(response);
+        });
 }
 // Function that handles button
 

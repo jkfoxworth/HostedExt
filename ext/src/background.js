@@ -7,6 +7,7 @@ var url = "http://estasney1.pythonanywhere.com/api/v1/profiles";
 
 // Event listener that waits for message received from inject.js
 // Data is from profile page
+
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     if (request.action === "new_clip") {
         // if it's passing in new data...
@@ -18,44 +19,44 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
         }
 });
 
-// Event Listener that waits for popup.js to pass a list of Urls
 
+// Event Listener that waits for popup.js to pass a list of Urls
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     if (request.action === "checked_profiles") {
         // if it's passing a list of profiles
         console.log("Received list of profiles");
-        // Call function postData
-        requestPages(request.checked);
-        // No sendResponse needed, send empty object
+        console.log(request.checked);
+        requestPages(0, request.checked);
         sendResponse();
     }
 });
 
-function requestPages(checked_profiles){
-    // expect multiple pages
-    var page_results = [];
-    for (var i = 0; i < checked_profiles.length; i++) {
-        var i_page = checked_profiles[i];
-
-        // messaging
-
-        chrome.tabs.query({active: true, currentWindow: true}, function (tabs) {
-            chrome.tabs.sendMessage(
-                tabs[0].id, {action: "ajax_page", target: i_page},
-                // What to do with the response received
-                function (response) {
-                    page_results.push(response.content);
-                });
-        });
-    }
-    console.log(page_results);
-
-    // once complete pass page results to popup.js to display in popup.html
 
 
+function dataToPopup(response) {
+    chrome.runtime.sendMessage(
+        {action: "new_ajax", data:response},
+        // responseCallback
+        function (response) {
+            });
 }
 
-
+function requestPages(counter, urls){
+    var url_length = url.length;
+    if (counter < url_length) {
+        setTimeout(function() {
+            chrome.tabs.query({}, function (tabs) {
+                chrome.tabs.sendMessage(tabs[0].id, {action: 'get_page', target: urls[counter]}, function (response) {
+                    console.log("Response from inject");
+                    console.log(response);
+                    dataToPopup(response);
+                });
+            });
+        }, 5000);
+        counter ++;
+        requestPages(counter, urls);
+        }
+}
 
 // Function that passes data from browser to specified url
 function postData(url, id, purl, raw_html) {

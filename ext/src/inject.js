@@ -81,21 +81,25 @@ function fetchResultData(callback) {
     callback(results);
 }
 
-function profileAjax(target_url, callback){
+function ajaxGet(url, callback){
+    console.log("fetching" + url);
     $.ajax({
         type: 'GET',
         async: true,
         timeout: 10000,
-        url: target_url,
-        beforeSend : function(xhr) {
+        url: url,
+        beforeSend: function (xhr) {
             xhr.setRequestHeader('Accept', 'application/json, text/javascript, */*; q=0.01');
             xhr.setRequestHeader('Accept-Language', 'en-US,en;q=0.8');
             xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
         },
-        success: function (data) {
-            callback(data)
-        }})
+        complete: function (data){
+            callback({'action': 'ajax_done', 'data': data.responseText});
+        }
+    });
 }
+
+
 
 
 
@@ -113,15 +117,15 @@ function sendResults(ResultData) {
             });
     }
 
-function sendAjaxProfile(profile_data){
-    chrome.runtime.sendMessage(
-        {action: "fetched_page", data:profile_data},
-        function (response) {
-            console.log("Sent Profile Data");
-        });
-    }
-
-
+// function sendAjaxProfile(profile_data){
+//     chrome.runtime.sendMessage(
+//         {action: "fetched_page", data:profile_data},
+//         function (response) {
+//             console.log("Sent Profile Data");
+//         }
+//         }
+//     )
+// }
 
 // Determine what page url is and run appropriate script
 
@@ -130,6 +134,7 @@ var current_url = window.location.href;
 if (current_url.indexOf("profile") >= 0) {
     // Page is profile
     pageStatus(clipIt);
+
 } else if(current_url.indexOf("smartsearch") >= 0) {
     // Search results page
     chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
@@ -140,16 +145,15 @@ if (current_url.indexOf("profile") >= 0) {
             fetchResultData(sendResults);
             // No sendResponse needed, send empty object
             sendResponse();
-        } else if (request.action === 'ajax_page') {
+        } else if (request.action === 'get_page') {
             // Use callback
-
-            profileAjax(request.target, function (data){
-                sendAjaxProfile(data);
-            })
-
-
+            console.log("Ajax Requested");
+            console.log(request.target);
+            ajaxGet(request.target, sendResponse);
+            return true;
 
         }
-    });
-}
+        })
+    }
+
 
