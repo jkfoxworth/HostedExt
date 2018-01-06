@@ -90,7 +90,7 @@ function allowExtraction() {
         'text': 'Begin Extraction'
     }).appendTo('#buttonDiv');
     document.querySelector("#extract").addEventListener('click', makeExtractList);
-    document.querySelector("#list").removeEventListener('click');
+    document.querySelector("#list").removeEventListener('click', handleButton);
 }
 
 

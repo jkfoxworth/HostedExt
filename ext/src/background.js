@@ -36,27 +36,43 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     }
 });
 
-
-// Cleans up Ajax using regex
-// Passes parameters to callback function (dataToPopup)
-// Calls dataToPopup when the response is parsed
-function cleanAjax(raw, counter, urls, callback) {
+function startPattern(raw, counter, urls) {
     var pattern = new RegExp(/<code id="templates\/desktop\/profile\/profile_streaming-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}-content"><!--/, 'gim');
-    var start_code = pattern.exec(resp);
-    if (start_code !== null && start_code.length > 0) {
-        var re = /--><\/code>/gim;
-        re.lastIndex = start_code.index + start_code[0].length;
-        var end_code = re.exec(raw);
-        if (end_code !== null && end_code.length > 0) {
-            var code = JSON.parse(raw.substring(start_code.index + start_code[0].length, end_code.index));
-        }
-    }
-    if (code) {
-        datastore.push(code);
-        callback(code, counter, urls); // Code is parsed, callback will send it to popup.js
-    }
+    var start_code = function() {
+        var sc = pattern.exec(raw);
+        finishPattern(raw, sc, counter, urls);
+    };
+    start_code();
 }
 
+function finishPattern(raw, start_code, counter, urls) {
+    var re = /--><\/code>/gim;
+    var end_code = function () {
+        re.lastIndex = start_code.index + start_code[0].length;
+        var end_code = re.exec(raw);
+        startJSON(raw, start_code, end_code, counter, urls);
+    };
+    end_code();
+}
+
+function startJSON(raw, start_code, end_code, counter, urls){
+    var json_code = function () {
+        var code = JSON.parse(raw.substring(start_code.index + start_code[0].length, end_code.index));
+        console.log(code);
+        finishJSON(code, counter, urls);
+    };
+    json_code();
+}
+
+function finishJSON(code, counter, urls) {
+    datastore.push(code);
+    var s = function () {
+        var c = JSON.stringify(code);
+        dataToPopup(c, counter, urls);
+    };
+    s();
+
+}
 
 
 function dataToPopup(response, counter, urls) {
@@ -88,7 +104,7 @@ function requestPages(counter, urls) {
     chrome.tabs.query({}, function (tabs) { // Empty query that returns all tabs open in Chrome
         chrome.tabs.sendMessage(tabs[0].id, {action: 'get_page', target: urls[counter]}, function (response) {
             console.log("Received AJAX from Inject");
-            cleanAjax(response, counter, urls, dataToPopup); // Callback called when response is received
+            startPattern(response.data, counter, urls); // Callback called when response is received
         });
     });
 }
