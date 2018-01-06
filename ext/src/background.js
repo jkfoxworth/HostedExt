@@ -42,12 +42,15 @@ function dataToPopup(response, counter, urls) {
 
     // Call requestPages as soon as message is sent
     counter++;
-    if (counter < end_counter) {
-        requestPages(counter, urls);
-    } else {
-        console.log("Done with AJAX Pages");
-    }
 
+    setTimeout(function () {
+
+        if (counter < end_counter) {
+            requestPages(counter, urls);
+        } else {
+            console.log("Done with AJAX Pages");
+        }
+    }, 8000);
 }
 
 function requestPages(counter, urls) {
@@ -55,7 +58,7 @@ function requestPages(counter, urls) {
     chrome.tabs.query({}, function (tabs) {
         chrome.tabs.sendMessage(tabs[0].id, {action: 'get_page', target: urls[counter]}, function (response) {
             console.log("Received AJAX from Inject");
-            dataToPopup(response);
+            dataToPopup(response, counter, urls);
         });
     });
 }

@@ -82,7 +82,7 @@ function fetchResultData(callback) {
 }
 
 function ajaxGet(url, callback){
-    console.log("fetching" + url);
+    console.log("fetching " + url);
     $.ajax({
         type: 'GET',
         async: true,
