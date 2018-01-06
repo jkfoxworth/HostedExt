@@ -24,29 +24,17 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
         sendResponse();
     } else if (request.action === 'new_ajax') {
         console.log("Got Ajax");
-        console.log(request.data);
+        styleAjax(request.data);
     }
 });
 
-function cleanAjax(raw, callback) {
-    var pattern = new RegExp(/<code id="templates\/desktop\/profile\/profile_streaming-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}-content"><!--/, 'gim');
-    var start_code = pattern.exec(resp);
-    if (start_code !== null && start_code.length > 0) {
-        var re = /--><\/code>/gim;
-        re.lastIndex = start_code.index + start_code[0].length;
-        var end_code = re.exec(raw);
-        if (end_code !== null && end_code.length > 0) {
-            var code = JSON.parse(raw.substring(start_code.index + start_code[0].length, end_code.index));
-        }
-    }
-    if (code) {
-        callback(code);
-    }
-}
 
 function styleAjax(data){
-    var re = /(<code id="templates\/desktop\/profile\/profile_streaming-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}-content"><!--).+-->/gim;
-    var matched_data = re.ex
+    $(".result").remove(); // Remove any result elements
+    $("<p/>", {
+        'id': 'ajax_result',
+        'text': data
+    }).appendTo('#people_holder');
 }
 
 
@@ -67,7 +55,7 @@ function styleResults(SearchResults){
 
         $("<input/>", {
             'type': 'checkbox'
-        }).prop('checked', true).appendTo(i_selector);
+        }).prop('checked', false).appendTo(i_selector);
 
         $("<a/>", {
             'class': 'person_name',
@@ -102,6 +90,7 @@ function allowExtraction() {
         'text': 'Begin Extraction'
     }).appendTo('#buttonDiv');
     document.querySelector("#extract").addEventListener('click', makeExtractList);
+    document.querySelector("#list").removeEventListener('click');
 }
 
 
