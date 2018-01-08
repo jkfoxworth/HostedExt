@@ -1,36 +1,36 @@
 // popup.js
 
-// Sends message to the active tab
-// Passes a request to call script from inject.js
+/*
+Requesting that inject.js provide results from search page
+
+requestResults() - Send message requesting results
+
+
+ */
+
 function requestResults() {
     chrome.tabs.query({active: true, currentWindow: true}, function (tabs) {
         chrome.tabs.sendMessage(
             tabs[0].id, {action: "fetch_results"},
             function (response) {
-                console.log(response);
             });
     });
 }
 
-// Awaits a response from the extension
 // Awaits message from inject.js. Message contains SearchResults
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     if (request.action === "new_results") {
-        // if it's passing in new results...
-        console.log("New results received");
-        // Call function postData
-        styleResults(request.results);
-        // No sendResponse needed, send empty object
+        styleResults(request.results); // Response Data to HTML
         sendResponse();
     } else if (request.action === 'new_ajax') {
-        console.log("Got Ajax");
-        styleAjax(request.data);
+        styleAjax(request.data); // Parsed JSON
     }
 });
 
 
+// TODO Summarize AJAX
 function styleAjax(data){
-    $(".result").remove(); // Remove any result elements
+    $(".result").remove(); // Remove any result elements making room for responses
     $("<p/>", {
         'id': 'ajax_result',
         'text': data
@@ -75,7 +75,7 @@ function styleResults(SearchResults){
 
         $("<img>", {
             'class': 'picture',
-            'src': i_result.picture_url
+            'src': i_result.picture_url // TODO Don't hotlink image
         }).appendTo(i_selector);
 
     }
@@ -90,7 +90,8 @@ function allowExtraction() {
         'text': 'Begin Extraction'
     }).appendTo('#buttonDiv');
     document.querySelector("#extract").addEventListener('click', makeExtractList);
-    document.querySelector("#list").removeEventListener('click', handleButton);
+    document.querySelector("#list").removeEventListener('click', handleButton); // TODO Readd event listener
+
 }
 
 
@@ -105,7 +106,7 @@ function cleanURL(old_url) {
 // These are passed to background.js
 
 function makeExtractList (){
-    // Generate array of URL's that have checkmark
+    // Generate array of URL's that have been selected
     var checked_profiles = [];
     var popup_profiles = $("#people_holder").find("div");
     var popup_checkboxes = $("input");
@@ -136,7 +137,7 @@ function sendPageList(checked_profiles)  {
         {action: "checked_profiles", checked:checked_profiles},
         // responseCallback
         function (response) {
-            console.log(response);
+            // console.log(response);
         });
 }
 // Function that handles button

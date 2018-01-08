@@ -2,7 +2,6 @@
 
 // This will await the document response that it is complete
 // Calls callback function once page is loaded
-// Prevents running inject.js too early
 function pageStatus(callback) {
   setTimeout(function() {
     var x = document.readyState;
@@ -10,7 +9,7 @@ function pageStatus(callback) {
       timeout();
     } else {
       // alert($("h1.searchable").text());
-      console.log("Page Loaded");
+
       callback();
     }
   }, 2000);
@@ -98,11 +97,6 @@ function ajaxGet(url, callback){
         }
     });
 }
-
-
-
-
-
 
 // Sending search results to popup.js
 function sendResults(ResultData) {

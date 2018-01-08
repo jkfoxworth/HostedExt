@@ -1,21 +1,25 @@
 // background.js
 
-// Destination URL, comment/uncomment as needed
-
+// Destination URL
+// Local testing with Flask
 // var url = "http://127.0.0.1:5000/api/v1/profiles";
 var url = "http://estasney1.pythonanywhere.com/api/v1/profiles";
 
 // Hold the AJAX responses in background.js
-// Background.js is persistent
+// TODO Write Constructor That Accepts JSON, parses to Object
 var datastore = [];
 
-// Event listener that waits for message received from inject.js
-// Data is from profile page
+// Event Listeners
 
+/*
+Sender: Inject.js
+Content: Raw HTML of Profile Page
+On Message: Call postData()
+Response Sent: None
+ */
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     if (request.action === "new_clip") {
-        // if it's passing in new data...
-        console.log("New message received");
+        // console.log("New message received");
         // Call function postData
         postData(url, request.id, request.purl, request.raw_html);
         // No sendResponse needed, send empty object
@@ -23,19 +27,34 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     }
 });
 
+/*
+Sender: Popup.js
+Content: Array of URLS
+On Message: call requestPages()
+Response Sent: None
+ */
 
-// Event Listener that waits for popup.js to pass a list of Urls
-// Routes them to inject.js
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     if (request.action === "checked_profiles") {
         // if it's passing a list of profiles
-        console.log("Received list of profiles");
-        console.log(request.checked);
+        // console.log("Received list of profiles");
         requestPages(0, request.checked);
         sendResponse();
     }
 });
 
+
+
+/* Function Chain That Handles Parsing AJAX ResponseText
+
+
+startPattern
+finishPattern
+startJSON
+finishJSON
+dataToPopup
+
+ */
 function startPattern(raw, counter, urls) {
     var pattern = new RegExp(/<code id="templates\/desktop\/profile\/profile_streaming-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}-content"><!--/, 'gim');
     var start_code = function() {
@@ -58,7 +77,7 @@ function finishPattern(raw, start_code, counter, urls) {
 function startJSON(raw, start_code, end_code, counter, urls){
     var json_code = function () {
         var code = JSON.parse(raw.substring(start_code.index + start_code[0].length, end_code.index));
-        console.log(code);
+        // console.log(code);
         finishJSON(code, counter, urls);
     };
     json_code();
@@ -83,32 +102,37 @@ function dataToPopup(response, counter, urls) {
         function (response) { // Empty function, do nothing with response
         });
 
-    // Call requestPages as soon as message is sent
-    counter++;
-
-    // Intent is to call requestPages every 8 seconds
+    counter++; // Increase counter by 1.
+    // Timeout to set random interval between requests
     setTimeout(function () {
-
         if (counter < end_counter) {
             requestPages(counter, urls);
         } else {
-            console.log("Done with AJAX Pages");
+            // console.log("Done with AJAX Pages");
         }
-    }, 8000);
+    }, getRandomInt(5, 8));
 }
 
 
-// Called from event listener. Expects counter - int, and urls - []
+/* Called from Event Listener.
+Counter - Int : Defaults to 0. Corresponds to index position of Array
+Urls - Array : Array of Urls
+ */
 function requestPages(counter, urls) {
-
     chrome.tabs.query({}, function (tabs) { // Empty query that returns all tabs open in Chrome
         chrome.tabs.sendMessage(tabs[0].id, {action: 'get_page', target: urls[counter]}, function (response) {
-            console.log("Received AJAX from Inject");
             startPattern(response.data, counter, urls); // Callback called when response is received
         });
     });
 }
 
+/*
+Sends XMLRequest to External URL
+Url - String : Global defined at top of fil
+ID - String : Member ID parsed from HTML
+purl - String : Profile URL
+raw_html - String : Raw HTML
+*/
 
 // Function that passes data from browser to specified url
 function postData(url, id, purl, raw_html) {
@@ -128,8 +152,14 @@ function postData(url, id, purl, raw_html) {
     xhttp.send(data);
 }
 
+// TODO Function that passes AJAX requested profiles to url
 
-
+function getRandomInt(min, max) {
+    min = Math.ceil(min)*1000;
+    max = Math.floor(max)*1000;
+    var calc = Math.floor(Math.random() * (max - min)) + min;
+    return calc;
+}
 
 
 
