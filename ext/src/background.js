@@ -2,10 +2,10 @@
 
 // Destination URL
 // Local testing with Flask
-// var url = "http://127.0.0.1:5000/api/v1/profiles";
-// var url_bulk = "http://127.0.0.1:5000/api/v1/bulk_profiles";
-var url = "http://estasney1.pythonanywhere.com/api/v1/profiles";
-var url_bulk = "http://estasney1.pythonanywhere.com/api/v1/bulk_profiles";
+var url = "http://127.0.0.1:5000/api/v1/profiles";
+var url_bulk = "http://127.0.0.1:5000/api/v1/bulk_profiles";
+// var url = "http://estasney1.pythonanywhere.com/api/v1/profiles";
+// var url_bulk = "http://estasney1.pythonanywhere.com/api/v1/bulk_profiles";
 
 // Hold the AJAX responses in background.js
 // TODO Write Constructor That Accepts JSON, parses to Object
@@ -14,8 +14,9 @@ var url_bulk = "http://estasney1.pythonanywhere.com/api/v1/bulk_profiles";
 // Callback will be to send AJAX once parsed
 function filter_json(code, callback) {
     var mydata, positions, profile;
-    positions = code["positions"] || false;
-    profile = code["profile"] || false;
+    code = JSON.parse(code);
+    positions = code['data']["positions"] || false;
+    profile = code['data']["profile"] || false;
     mydata = {};
     if (positions) {
         mydata["positions"] = positions;
@@ -107,7 +108,7 @@ function finishJSON(code, counter, urls) {
     var s = function () {
         var c = JSON.stringify(code);
         dataToPopup(c, counter, urls);
-        filter_json(code, postDataBulk);
+        filter_json(c, postDataBulk);
     };
     s();
 
@@ -175,14 +176,19 @@ function postData(url, id, purl, raw_html) {
 // TODO Function that passes AJAX requested profiles to url
 
 function postDataBulk(filtered_ajax) {
-    $.ajax({
-        type: 'POST',
-        async: true,
-        timeout: 10000,
-        url: url_bulk
-    });
-}
+    var xhttp;
+    xhttp = new XMLHttpRequest();
+    xhttp.onreadystatechange = function () {
+        if (this.readyState === 4 && this.status === 200) {
+            console.log("Bulk message success");
+        }
+    };
+    xhttp.open("POST", url_bulk, true);
+    xhttp.setRequestHeader("Content-type", "application/json");
 
+    var data = JSON.stringify({'data':filtered_ajax});
+    xhttp.send(data);
+}
 function getRandomInt(min, max) {
     min = Math.ceil(min)*1000;
     max = Math.floor(max)*1000;
