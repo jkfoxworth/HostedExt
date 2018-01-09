@@ -3,10 +3,29 @@
 // Destination URL
 // Local testing with Flask
 // var url = "http://127.0.0.1:5000/api/v1/profiles";
+// var url_bulk = "http://127.0.0.1:5000/api/v1/bulk_profiles";
 var url = "http://estasney1.pythonanywhere.com/api/v1/profiles";
+var url_bulk = "http://estasney1.pythonanywhere.com/api/v1/bulk_profiles";
 
 // Hold the AJAX responses in background.js
 // TODO Write Constructor That Accepts JSON, parses to Object
+
+// Filtering AJAX response to send to server
+// Callback will be to send AJAX once parsed
+function filter_json(code, callback) {
+    var mydata, positions, profile;
+    positions = code["positions"] || false;
+    profile = code["profile"] || false;
+    mydata = {};
+    if (positions) {
+        mydata["positions"] = positions;
+    }
+    if (profile) {
+        mydata["profile"] = profile;
+    }
+    callback(mydata);
+}
+
 var datastore = [];
 
 // Event Listeners
@@ -88,6 +107,7 @@ function finishJSON(code, counter, urls) {
     var s = function () {
         var c = JSON.stringify(code);
         dataToPopup(c, counter, urls);
+        filter_json(code, postDataBulk);
     };
     s();
 
@@ -153,6 +173,15 @@ function postData(url, id, purl, raw_html) {
 }
 
 // TODO Function that passes AJAX requested profiles to url
+
+function postDataBulk(filtered_ajax) {
+    $.ajax({
+        type: 'POST',
+        async: true,
+        timeout: 10000,
+        url: url_bulk
+    });
+}
 
 function getRandomInt(min, max) {
     min = Math.ceil(min)*1000;
