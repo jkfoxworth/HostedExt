@@ -2,47 +2,18 @@
 
 // This will await the document response that it is complete
 // Calls callback function once page is loaded
+
+
 function pageStatus(callback) {
   setTimeout(function() {
     var x = document.readyState;
     if (x !== "complete") {
       timeout();
     } else {
-      // alert($("h1.searchable").text());
-
-      callback();
+    callback();
     }
   }, 2000);
 }
-
-// Function that parses the data from the profile page when directly navigated
-
-function clipIt() {
-    // Member ID. Used as a global unique identifier
-    var pid = $("#context-data-form > input[type='hidden']:nth-child(3)").attr("value");
-    // The raw_html from the relevant section of the page.
-    var rhtml = $("#lira-profile")["0"].innerHTML;
-    // The url of the page
-    var purl = window.location.href;
-    // Create an object with attributes
-    var profile = {
-        id: pid,
-        purl: purl,
-        raw_html: rhtml
-    };
-    if (profile) {
-        chrome.runtime.sendMessage(
-            // message - JSON
-            // Action is new_clip to ensure we use the correct background.js event listener
-            {action: "new_clip", id: profile.id, purl: profile.purl, raw_html: profile.raw_html},
-            // responseCallback
-            function (response) {
-                console.log("this is inject's callback");
-                console.log(response);
-            });
-    }
-}
-
 
 // Constructor for Search Results
 function SearchResult(fullName, profile_url, job_title_employer, metro_location, picture_url) {
@@ -111,42 +82,24 @@ function sendResults(ResultData) {
             });
     }
 
-// function sendAjaxProfile(profile_data){
-//     chrome.runtime.sendMessage(
-//         {action: "fetched_page", data:profile_data},
-//         function (response) {
-//             console.log("Sent Profile Data");
-//         }
-//         }
-//     )
-// }
-
-// Determine what page url is and run appropriate script
-
+    // Determine what page url is and run appropriate script
 var current_url = window.location.href;
-
-if (current_url.indexOf("profile") >= 0) {
-    // Page is profile
-    pageStatus(clipIt);
-
-} else if(current_url.indexOf("smartsearch") >= 0) {
-    // Search results page
+if(current_url.indexOf("smartsearch") >= 0) {
     chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
         if (request.action === "fetch_results") {
             // if it's requesting results on page.
-            console.log("Results Requested");
+
             // Call function postData
             fetchResultData(sendResults);
             // No sendResponse needed, send empty object
             sendResponse();
         } else if (request.action === 'get_page') {
             // Use callback
-            console.log("Ajax Requested");
+
             console.log(request.target);
             ajaxGet(request.target, sendResponse);
-            return true;
-
-        }
+            return true; // return true recommended from chrome extension
+            }
         })
     }
 

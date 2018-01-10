@@ -55,7 +55,7 @@ function styleResults(SearchResults){
 
         $("<input/>", {
             'type': 'checkbox'
-        }).prop('checked', false).appendTo(i_selector);
+        }).prop('checked', true).appendTo(i_selector);
 
         $("<a/>", {
             'class': 'person_name',

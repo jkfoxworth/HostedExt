@@ -3,12 +3,14 @@
 // Destination URL
 // Local testing with Flask
 var url = "http://127.0.0.1:5000/api/v1/profiles";
-var url_bulk = "http://127.0.0.1:5000/api/v1/bulk_profiles";
+
 // var url = "http://estasney1.pythonanywhere.com/api/v1/profiles";
-// var url_bulk = "http://estasney1.pythonanywhere.com/api/v1/bulk_profiles";
+
 
 // Hold the AJAX responses in background.js
 // TODO Write Constructor That Accepts JSON, parses to Object
+
+var datastore = [];
 
 // Filtering AJAX response to send to server
 // Callback will be to send AJAX once parsed
@@ -27,25 +29,9 @@ function filter_json(code, callback) {
     callback(mydata);
 }
 
-var datastore = [];
+
 
 // Event Listeners
-
-/*
-Sender: Inject.js
-Content: Raw HTML of Profile Page
-On Message: Call postData()
-Response Sent: None
- */
-chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
-    if (request.action === "new_clip") {
-        // console.log("New message received");
-        // Call function postData
-        postData(url, request.id, request.purl, request.raw_html);
-        // No sendResponse needed, send empty object
-        sendResponse();
-    }
-});
 
 /*
 Sender: Popup.js
@@ -147,34 +133,6 @@ function requestPages(counter, urls) {
     });
 }
 
-/*
-Sends XMLRequest to External URL
-Url - String : Global defined at top of fil
-ID - String : Member ID parsed from HTML
-purl - String : Profile URL
-raw_html - String : Raw HTML
-*/
-
-// Function that passes data from browser to specified url
-function postData(url, id, purl, raw_html) {
-    var xhttp;
-    xhttp = new XMLHttpRequest();
-    xhttp.onreadystatechange = function () {
-        if (this.readyState === 4 && this.status === 200) {
-            console.log("Message success");
-        }
-    };
-    xhttp.open("POST", url, true);
-    xhttp.setRequestHeader("Content-type", "application/json");
-    // id: member_id
-    // purl: page url
-    // raw_html: the page source html from inject.js
-    var data = JSON.stringify({"id": id, "purl": purl, "raw_html": raw_html});
-    xhttp.send(data);
-}
-
-// TODO Function that passes AJAX requested profiles to url
-
 function postDataBulk(filtered_ajax) {
     var xhttp;
     xhttp = new XMLHttpRequest();
@@ -183,7 +141,7 @@ function postDataBulk(filtered_ajax) {
             console.log("Bulk message success");
         }
     };
-    xhttp.open("POST", url_bulk, true);
+    xhttp.open("POST", url, true);
     xhttp.setRequestHeader("Content-type", "application/json");
 
     var data = JSON.stringify({'data':filtered_ajax});
