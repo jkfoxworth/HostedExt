@@ -126,7 +126,7 @@ Counter - Int : Defaults to 0. Corresponds to index position of Array
 Urls - Array : Array of Urls
  */
 function requestPages(counter, urls) {
-    chrome.tabs.query({}, function (tabs) { // Empty query that returns all tabs open in Chrome
+    chrome.tabs.query({active:true}, function (tabs) { // Query returns active tab
         chrome.tabs.sendMessage(tabs[0].id, {action: 'get_page', target: urls[counter]}, function (response) {
             startPattern(response.data, counter, urls); // Callback called when response is received
         });
