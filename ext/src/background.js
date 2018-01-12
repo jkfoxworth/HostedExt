@@ -1,10 +1,96 @@
 // background.js
 
+var token;
+
 // Destination URL
 // Local testing with Flask
-var url = "http://127.0.0.1:5000/api/v1/profiles";
+// var url = "http://127.0.0.1:5000/api/v1/profiles";
+var url = "http://estasney1.pythonanywhere.com/api/v1/profiles";
 
-// var url = "http://estasney1.pythonanywhere.com/api/v1/profiles";
+/*
+
+Login Handlers
+==============
+
+ */
+
+/*
+
+Login Messaging
+===============
+
+*/
+
+/*
+
+Login Event Listeners
+====================
+
+
+
+*/
+
+// Called by default from popup.js
+chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+    if (request.action === "get user state") {
+        check_token(handle_token_check);
+        sendResponse();
+    }
+});
+
+// Callback handler for response from chrome_token()
+
+function handle_token_check(token) {
+    if (token === false) {
+        show_login();
+    } else {
+        show_action_page();
+    }
+}
+
+function doEncoding(auth_string) {
+    var auth_encoded = btoa(auth_string);
+    doHading(auth_encoded);
+}
+
+// TODO Confirm valid token with server
+
+// User is logged in, display actions
+
+function show_action_page() {
+    chrome.runtime.sendMessage(
+        {action: "show actions"},
+        function (response) {
+        });
+}
+
+// User is not logged in, show login error
+
+function show_login() {
+    chrome.runtime.sendMessage(
+        {action: "show login"},
+        function (response) {
+            });
+    }
+
+
+
+
+
+// Storage Functions
+
+// Check for user state
+function check_token(callback) {
+    chrome.storage.sync.get('token', function (items) {
+        if (items) {
+            callback(items);
+
+        } else {
+            callback(false);
+        }
+    });
+}
+
 
 
 // Hold the AJAX responses in background.js

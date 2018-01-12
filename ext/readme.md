@@ -33,36 +33,33 @@
         
 
 ### Todo
-1. Popup
-    1. Layout
-        1. CSS
-    2. Summarize AJAX
-    3. Add option to download as CSV
-        1. Script
-        2. HTML
-    4. Login
-        1. Server side
-            1. Authenticate
-            2. Respond with Authorization header 
-        2. Local storage
-            1. Keep logged in for certain time            
-    5. Sessions
-        1. After authenticated
-        2. Create GUID session key
-        3. Add as a header to external POST
-        4. Include Authorization header with POST
+1. Popup - Work in Progress
+    1. Responsive
+        a. Handles various states such as:
+            1. Login
+            2. Show possible actions
+            3. Show Results
+    2. Layout
+        1. Adding bootstrap
+    3. JS
+        1. Add event listeners for various buttons
+        2. Send receive messages with background.js
+    
 
 2. Background
-    1. AJAX data constructor to remove
-        1. Redundant Data
-        2. Irrelevant Data
-    2. Pass AJAX to External URL
-        1. After filtering
-    3. Script to pop URLS from fetch list if recently requested
-        1. If popped, accept server response with url data
-    4. Add encryption
-        1. Server side
-        2. Client side 
+    1. Background will now provide instructions to popup.js for View
+    2. Login Scheme
+        a. Browser Action Detected
+        b. Popup begins as blank
+        c. Background.js checks if user is authorized
+            1. Checks for presence of API key in Chrome.storage
+        d. If no token (first login), instructs popup to show login elements
+        e. If token, confirms it is valid
+            If not, shows login
+    3. Actions
+        a. Show profiles
+    4. Results
+        a. Future        
 
 
 

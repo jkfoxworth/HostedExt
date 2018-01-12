@@ -1,12 +1,93 @@
 // popup.js
 
+
+$(function(){
+    chrome.runtime.sendMessage(
+        {action: "get user state"},
+        function (response) {
+            // Pass the response the handler
+            handleUserState(response)
+        });
+});
+
 /*
-Requesting that inject.js provide results from search page
 
-requestResults() - Send message requesting results
+View Functions
+==============
 
+onmessage event listener
+    - calls appropriate view function based on message
+
+show_login()
+    - Appends a login form to the mainPoup
+
+handleUserState()
+    - Calls appropriate cascade of functions based on user's current authentication state
+
+*/
+
+function handleUserState(response){
+    if (response.action === "show login") {
+        show_login();
+    } else if (response.action === 'show action') {
+        show_action();
+    } else if (response.action === 'show login error') {
+        show_login_error();
+    }
+}
+
+
+/*
+
+DOM Manipulation
+================
 
  */
+function show_login() {
+
+    var form = $.parseHTML("<form id='login_form'> <div class='form-group row d-flex justify-content-center'> <div class='col-sm-10'> <input class='form-control' id='user_id' placeholder='User ID'> </div> </div> <div class='form-group row d-flex justify-content-center'> <div class='col-sm-10'> <input type='password' class='form-control' id='user_pass' placeholder='Password'> </div> </div> <div class='form-group row d-flex justify-content-center'></div></form><div class='row d-flex justify-content-center'></div><button class='btn btn-primary' id='login_button'>Login</button></div> ");
+    $('#mainPopup').append(form);
+    $('#login_button').on('click', doLogin);
+}
+
+function show_action() {
+    var action_buttons = $.parseHTML("<div id='action_buttons' class='btn-toolbar d-flex justify-content-center' role='toolbar'> <div class='btn-group mr-2' role='group'> <button type='button' class='btn btn-primary'>Select Profiles</button> </div> <div class='btn-group mr-2' role='group'> <button type='button' class='btn btn-secondary'>Extract Profiles</button> </div> </div>");
+    $('#actions').append(action_buttons);
+    // TODO Add event listens for the buttons
+}
+
+function show_login_error() {
+    //
+}
+
+/*
+
+/*
+
+Messaging Functions
+===================
+
+doLogin - event listener for user pressing login button
+
+credToBackground - sends the values to background.js for handling
+
+requestResults() - sends message intended for inject.js to get the results from page
+ */
+
+function doLogin() {
+    var username = $('#user_id').val();
+    var password = $('#user_pass').val();
+    var auth_string = username + ":" + password;
+    credToBackground(auth_string);
+}
+
+function credToBackground(auth_string){
+    chrome.runtime.sendMessage(
+        {action: "user login submit", data:auth_string},
+        function (response) {
+            // TODO Show waiting screen
+        });
+}
 
 function requestResults() {
     chrome.tabs.query({active: true, currentWindow: true}, function (tabs) {
@@ -27,8 +108,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     }
 });
 
-
-// TODO Summarize AJAX
+// TODO Get this in Bootstrap form
 function styleAjax(data){
     $(".result").remove(); // Remove any result elements making room for responses
     $("<p/>", {
@@ -148,4 +228,4 @@ function handleButton() {
 }
 
 // Event listener that listens for list button being clicked
-document.getElementById('list').addEventListener('click', handleButton);
+

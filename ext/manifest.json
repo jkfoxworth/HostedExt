@@ -17,8 +17,8 @@
   "browser_action": {
     "default_icon": "icons/icon19.png",
     "default_title": "Hermes",
-    "default_popup": "src/popup.html",
-    "js": "src/js/jquery/jquery.js"
+    "default_popup": "src/default.html",
+    "js": ["src/js/jquery/jquery.js", "src/js/bootstrap/js/bootstrap.js"]
   },
   "permissions": [
     "tabs",
@@ -30,7 +30,7 @@
       "https://www.linkedin.com/recruiter/profile*",
       "https://www.linkedin.com/recruiter/smartsearch*"
     ],
-    "js": ["src/js/jquery/jquery.js", "src/js/jquery-ui-1.12.1.custom/jquery-ui.js", "src/inject.js"]
+    "js": ["src/js/jquery/jquery.js", "src/inject.js"]
   }],
   "externally_connectable": {
     "matches": ["*://127.0.0.1/*", "*://localhost/*", "*://estasney1.pythonanywhere.com/*"]
