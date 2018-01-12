@@ -1,14 +1,13 @@
 // popup.js
 
 
-$(function(){
-    chrome.runtime.sendMessage(
-        {action: "get user state"},
-        function (response) {
-            // Pass the response the handler
-            handleUserState(response)
-        });
-});
+
+chrome.runtime.sendMessage(
+    {action: "get user state"},
+    function (response) {
+        handleUserState(response)
+    });
+
 
 /*
 
@@ -29,7 +28,7 @@ handleUserState()
 function handleUserState(response){
     if (response.action === "show login") {
         show_login();
-    } else if (response.action === 'show action') {
+    } else if (response.action === 'show actions') {
         show_action();
     } else if (response.action === 'show login error') {
         show_login_error();
@@ -46,9 +45,17 @@ DOM Manipulation
 function show_login() {
 
     var form = $.parseHTML("<form id='login_form'> <div class='form-group row d-flex justify-content-center'> <div class='col-sm-10'> <input class='form-control' id='user_id' placeholder='User ID'> </div> </div> <div class='form-group row d-flex justify-content-center'> <div class='col-sm-10'> <input type='password' class='form-control' id='user_pass' placeholder='Password'> </div> </div> <div class='form-group row d-flex justify-content-center'></div></form><div class='row d-flex justify-content-center'></div><button class='btn btn-primary' id='login_button'>Login</button></div> ");
-    $('#mainPopup').append(form);
-    $('#login_button').on('click', doLogin);
+    append_html('#mainPopup', form, function (){
+        $('#login_button').on('click', doLogin);
+    });
 }
+
+function append_html(id, html, callback) {
+    $(id).append(html);
+    callback();
+}
+
+
 
 function show_action() {
     var action_buttons = $.parseHTML("<div id='action_buttons' class='btn-toolbar d-flex justify-content-center' role='toolbar'> <div class='btn-group mr-2' role='group'> <button type='button' class='btn btn-primary'>Select Profiles</button> </div> <div class='btn-group mr-2' role='group'> <button type='button' class='btn btn-secondary'>Extract Profiles</button> </div> </div>");

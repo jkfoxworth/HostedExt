@@ -33,18 +33,18 @@ Login Event Listeners
 // Called by default from popup.js
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     if (request.action === "get user state") {
-        check_token(handle_token_check);
-        sendResponse();
+        check_token(handle_token_check, sendResponse);
+        return true;
     }
 });
 
 // Callback handler for response from chrome_token()
 
-function handle_token_check(token) {
+function handle_token_check(token, callback) {
     if (token === false) {
-        show_login();
+        show_login(callback);
     } else {
-        show_action_page();
+        show_action_page(callback);
     }
 }
 
@@ -57,36 +57,26 @@ function doEncoding(auth_string) {
 
 // User is logged in, display actions
 
-function show_action_page() {
-    chrome.runtime.sendMessage(
-        {action: "show actions"},
-        function (response) {
-        });
+function show_action_page(callback) {
+    callback({'action': 'show actions'});
 }
 
 // User is not logged in, show login error
 
-function show_login() {
-    chrome.runtime.sendMessage(
-        {action: "show login"},
-        function (response) {
-            });
-    }
-
-
-
-
+function show_login(callback) {
+    callback({'action': 'show login'});
+}
 
 // Storage Functions
 
 // Check for user state
-function check_token(callback) {
+function check_token(callback, responsecallback) {
     chrome.storage.sync.get('token', function (items) {
-        if (items) {
-            callback(items);
+        if (items.length != null) {
+            callback(items, responsecallback);
 
         } else {
-            callback(false);
+            callback(false, responsecallback);
         }
     });
 }
