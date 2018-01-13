@@ -82,7 +82,7 @@ function sendResults(ResultData) {
             });
     }
 
-    // Determine what page url is and run appropriate script
+    // Determine what page post_data_url is and run appropriate script
 var current_url = window.location.href;
 if(current_url.indexOf("smartsearch") >= 0) {
     chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {

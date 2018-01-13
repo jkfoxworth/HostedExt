@@ -204,7 +204,7 @@ function makeExtractList (){
         var i_checkbox = popup_checkboxes.eq(i);
         if (i_checkbox.prop('checked') === true) {
             // if checkbox is checked
-            // get the url so we can make a request
+            // get the post_data_url so we can make a request
             var i_url = cleanURL(popup_name_links.eq(i).prop('href'));
             checked_profiles.push(i_url);
         }

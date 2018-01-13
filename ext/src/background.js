@@ -4,8 +4,11 @@ var token;
 
 // Destination URL
 // Local testing with Flask
-// var url = "http://127.0.0.1:5000/api/v1/profiles";
-var url = "http://estasney1.pythonanywhere.com/api/v1/profiles";
+var post_data_url = "http://127.0.0.1:5000/api/v1/profiles";
+// var post_data_url = "http://estasney1.pythonanywhere.com/api/v1/profiles";
+
+var auth_url = "http://127.0.0.1:5000/api/v1/token";
+// var auth_url = "http://estasney1.pythonanywhere.com/api/v1/token";
 
 /*
 
@@ -26,15 +29,15 @@ Login Messaging
 Login Event Listeners
 ====================
 
-
-
 */
 
-// Called by default from popup.js
+// Called when popup is opened
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     if (request.action === "get user state") {
         check_token(handle_token_check, sendResponse);
         return true;
+    } else if (request.action === "user login submit") {
+        doEncoding(request.data);
     }
 });
 
@@ -50,7 +53,31 @@ function handle_token_check(token, callback) {
 
 function doEncoding(auth_string) {
     var auth_encoded = btoa(auth_string);
-    doHading(auth_encoded);
+    getAuth(auth_encoded, store_token);
+}
+
+function getAuth(auth_encoded, callback){
+    $.ajax({
+        type: 'POST',
+        async: true,
+        timeout: 10000,
+        url: auth_url,
+        dataType: 'json',
+        beforeSend: function (xhr) {
+            xhr.setRequestHeader('Accept', 'application/json, text/javascript, */*; q=0.01');
+            xhr.setRequestHeader('Accept-Language', 'en-US,en;q=0.8');
+            xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+            xhr.setRequestHeader('Authorization', 'Basic ' + auth_encoded);
+        },
+        success: function (data){
+            var json_data = JSON.stringify(data);
+            console.log(json_data);
+            callback(json_data);
+        },
+        error: function() {
+            // TODO Error handle
+        }
+    });
 }
 
 // TODO Confirm valid token with server
@@ -67,18 +94,34 @@ function show_login(callback) {
     callback({'action': 'show login'});
 }
 
-// Storage Functions
+
+
+
+
+/*
+
+Storage Functions
+================
+
+ */
 
 // Check for user state
 function check_token(callback, responsecallback) {
     chrome.storage.sync.get('token', function (items) {
-        if (items.length != null) {
-            callback(items, responsecallback);
+        if (items) {
+            if (items.token.length != null) {
+                callback(items.token, responsecallback);
+            }
 
         } else {
             callback(false, responsecallback);
         }
     });
+}
+
+// Set user state
+function store_token(token_value) {
+    chrome.storage.sync.set({'token': token_value});
 }
 
 
@@ -217,7 +260,7 @@ function postDataBulk(filtered_ajax) {
             console.log("Bulk message success");
         }
     };
-    xhttp.open("POST", url, true);
+    xhttp.open("POST", post_data_url, true);
     xhttp.setRequestHeader("Content-type", "application/json");
 
     var data = JSON.stringify({'data':filtered_ajax});
