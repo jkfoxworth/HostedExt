@@ -35,6 +35,18 @@ function handleUserState(response){
     }
 }
 
+function handleLoginResponse(response){
+    if (response) {
+        if (response.action === 'login success') {
+            new_login();
+        } else if(response.action === 'login fail') {
+            show_login_error();
+        }
+    } else {
+        show_login_error();
+    }
+}
+
 
 /*
 
@@ -44,7 +56,7 @@ DOM Manipulation
  */
 function show_login() {
 
-    var form = $.parseHTML("<form id='login_form'> <div class='form-group row d-flex justify-content-center'> <div class='col-sm-10'> <input class='form-control' id='user_id' placeholder='User ID'> </div> </div> <div class='form-group row d-flex justify-content-center'> <div class='col-sm-10'> <input type='password' class='form-control' id='user_pass' placeholder='Password'> </div> </div> <div class='form-group row d-flex justify-content-center'></div></form><div class='row d-flex justify-content-center'></div><button class='btn btn-primary' id='login_button'>Login</button></div> ");
+    var form = $.parseHTML("<form id='login_form'> <div class='form-group row d-flex justify-content-center'> <div class='col-sm-10'> <input class='form-control' id='user_id' placeholder='User ID'> </div> </div> <div class='form-group row d-flex justify-content-center'> <div class='col-sm-10'> <input type='password' class='form-control' id='user_pass' placeholder='Password'> </div> </div> <div class='form-group row d-flex justify-content-center'></div></form><div class='row d-flex justify-content-center'><button class='btn btn-primary' id='login_button'>Login</button></div>");
     append_html('#mainPopup', form, function (){
         $('#login_button').on('click', doLogin);
     });
@@ -64,7 +76,14 @@ function show_action() {
 }
 
 function show_login_error() {
-    //
+    var error_alert = $.parseHTML("<div class='alert alert-warning alert-dismissible fade show' role='alert'> Your credentials were not accepted <button type='button' class='close' data-dismiss='alert' aria-label='Close'> <span aria-hidden='true'>&times;</span> </button></div>");
+    $('#login_form').append(error_alert);
+}
+
+function new_login() {
+    $('#login_form').remove();
+    $('#login_button').remove();
+    show_action();
 }
 
 /*
@@ -92,7 +111,7 @@ function credToBackground(auth_string){
     chrome.runtime.sendMessage(
         {action: "user login submit", data:auth_string},
         function (response) {
-            // TODO Show waiting screen
+            handleLoginResponse(response);
         });
 }
 

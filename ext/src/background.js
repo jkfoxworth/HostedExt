@@ -17,12 +17,73 @@ Login Handlers
 
  */
 
-/*
+// @purpose determines if popup.html should be login or action
+function handle_token_check(token, callback) {
+    if (token === false) {
+        show_login(callback);
+    } else {
+        show_action_page(callback);
+    }
+}
 
-Login Messaging
-===============
+// @purpose base64 encoding auth string
+function doEncoding(auth_string, sendResponse) {
+    var auth_encoded = btoa(auth_string);
+    getAuth(auth_encoded, store_token, sendResponse);
+}
 
-*/
+
+// @purpose requests api_key/token from external server
+// @calls callback on success
+//
+function getAuth(auth_encoded, callback, sendResponse){
+    $.ajax({
+        type: 'POST',
+        async: true,
+        timeout: 10000,
+        url: auth_url,
+        dataType: 'json',
+        statusCode: {
+            404: function(data) {
+                show_login_error(sendResponse);
+            }
+        },
+        beforeSend: function (xhr) {
+            xhr.setRequestHeader('Accept', 'application/json, text/javascript, */*; q=0.01');
+            xhr.setRequestHeader('Accept-Language', 'en-US,en;q=0.8');
+            xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+            xhr.setRequestHeader('Authorization', 'Basic ' + auth_encoded);
+        },
+        success: function (data){
+            var json_data = JSON.stringify(data);
+            callback(json_data, sendResponse);
+        },
+        error: function(data) {
+            show_login_error(sendResponse);
+        }
+    });
+}
+
+// User is logged in, display actions
+
+function show_action_page(callback) {
+    callback({action: 'show actions'});
+}
+
+// User is not logged in, show login error
+
+function show_login(callback) {
+    callback({action: 'show login'});
+}
+
+function show_login_error(callback) {
+    console.log('telling popup of error');
+    callback({action: 'login fail'});
+}
+
+
+
+
 
 /*
 
@@ -37,62 +98,17 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
         check_token(handle_token_check, sendResponse);
         return true;
     } else if (request.action === "user login submit") {
-        doEncoding(request.data);
+        doEncoding(request.data, sendResponse);
+        return true;
     }
 });
 
-// Callback handler for response from chrome_token()
 
-function handle_token_check(token, callback) {
-    if (token === false) {
-        show_login(callback);
-    } else {
-        show_action_page(callback);
-    }
-}
 
-function doEncoding(auth_string) {
-    var auth_encoded = btoa(auth_string);
-    getAuth(auth_encoded, store_token);
-}
-
-function getAuth(auth_encoded, callback){
-    $.ajax({
-        type: 'POST',
-        async: true,
-        timeout: 10000,
-        url: auth_url,
-        dataType: 'json',
-        beforeSend: function (xhr) {
-            xhr.setRequestHeader('Accept', 'application/json, text/javascript, */*; q=0.01');
-            xhr.setRequestHeader('Accept-Language', 'en-US,en;q=0.8');
-            xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-            xhr.setRequestHeader('Authorization', 'Basic ' + auth_encoded);
-        },
-        success: function (data){
-            var json_data = JSON.stringify(data);
-            console.log(json_data);
-            callback(json_data);
-        },
-        error: function() {
-            // TODO Error handle
-        }
-    });
-}
 
 // TODO Confirm valid token with server
 
-// User is logged in, display actions
 
-function show_action_page(callback) {
-    callback({'action': 'show actions'});
-}
-
-// User is not logged in, show login error
-
-function show_login(callback) {
-    callback({'action': 'show login'});
-}
 
 
 
@@ -109,9 +125,17 @@ Storage Functions
 function check_token(callback, responsecallback) {
     chrome.storage.sync.get('token', function (items) {
         if (items) {
-            if (items.token.length != null) {
-                callback(items.token, responsecallback);
+            try {
+                if (items.token.length != null) {
+                    callback(items.token, responsecallback);
+                } else {
+                    callback(false, responsecallback);
+                }
             }
+            catch (e) {
+                callback(false, responsecallback);
+            }
+
 
         } else {
             callback(false, responsecallback);
@@ -120,8 +144,9 @@ function check_token(callback, responsecallback) {
 }
 
 // Set user state
-function store_token(token_value) {
+function store_token(token_value, sendResponse) {
     chrome.storage.sync.set({'token': token_value});
+    sendResponse({'action': 'login success'})
 }
 
 
