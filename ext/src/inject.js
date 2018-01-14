@@ -16,12 +16,25 @@ function pageStatus(callback) {
 }
 
 // Constructor for Search Results
-function SearchResult(fullName, profile_url, job_title_employer, metro_location, picture_url) {
-    this.fullName = fullName;
+function SearchResult(fullName, profile_url, job_title_employer) {
+    this.trim_name = function (fullName) {
+        var res = fullName.split(" ");
+        var f = res[0];
+        var l = res[1].split("")[0];
+        return f + " " + l + " ";
+        };
+    this.parse_el = function (job_title_employer, selection) {
+        var stripped_text = job_title_employer.replace(/<\/?.>/g, '');
+        if (selection === 'title') {
+            return stripped_text.split(' at ')[0];
+        } else if (selection === 'employer') {
+            return stripped_text.split(' at ')[1];
+        }
+    };
+    this.fullName = this.trim_name(fullName);
     this.profile_url = profile_url;
-    this.job_title_employer = job_title_employer;
-    this.metro_location = metro_location;
-    this.picture_url = picture_url;
+    this.job_title = this.parse_el(job_title_employer, 'title');
+    this.employer = this.parse_el(job_title_employer, 'employer');
 }
 
 // Function for parsing page results from search page
@@ -42,10 +55,8 @@ function fetchResultData(callback) {
             var job_text = current_job_element.innerHTML.split("<span")[0];
             return job_text
         };
-        var metro_location = i_element.querySelector('.location span:nth-child(1)').textContent;
-        var picture_url = i_element.querySelector('.profile-img').getAttribute('src');
 
-        var new_person = new SearchResult(fullname, profile_url, job_title(i_element), metro_location, picture_url);
+        var new_person = new SearchResult(fullname, profile_url, job_title(i_element));
         results.push(new_person);
     }
     callback(results);

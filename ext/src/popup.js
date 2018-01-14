@@ -70,10 +70,11 @@ function append_html(id, html, callback) {
 
 
 function show_action() {
-    var action_buttons = $.parseHTML("<div id='action_buttons' class='btn-toolbar d-flex justify-content-center' role='toolbar'> <div class='btn-group mr-2' role='group'> <button type='button' class='btn btn-primary'>Select Profiles</button> <button type='button' class='btn btn-secondary'>Extract Profiles</button> </div>  <button type='button' class='btn btn-light' id='logout_button'>Logout</button> </div> </div>");
+    var action_buttons = $.parseHTML("<div id='action_buttons' class='btn-toolbar d-flex justify-content-center' role='toolbar'> <div class='btn-group mr-2' role='group'> <button type='button' class='btn btn-primary' id='select_profiles_button'>Select Profiles</button> <button type='button' class='btn btn-secondary' id='extract_profiles_button'>Extract Profiles</button> </div>  <button type='button' class='btn btn-light' id='logout_button'>Logout</button> </div> </div>");
     $('#actions').append(action_buttons);
-    // TODO Add event listens for the action buttons
+    // TODO Add event listens for the extract button
     $('#logout_button').on('click', doLogout);
+    $('#select_profiles_button').on('click', requestResults);
 }
 
 function show_login_error() {
@@ -128,6 +129,8 @@ function credToBackground(auth_string){
         });
 }
 
+
+
 function requestResults() {
     chrome.tabs.query({active: true, currentWindow: true}, function (tabs) {
         chrome.tabs.sendMessage(
@@ -161,57 +164,27 @@ function styleAjax(data){
 // Generates HTML on popup.html from objects
 function styleResults(SearchResults){
 
+    // The table is 'invisible' unhide it
+    $('#results_table').prop('class', 'table');
     for (var i = 0; i < SearchResults.length; i++) {
         var i_result = SearchResults[i];
 
-        var i_selector_css = 'result-' + i.toString();
-        var i_selector = '#result-' + i.toString();
+        var row_id_attr = 'row-' + i.toString();
+        var row_id_sel = '#row-' + i.toString();
 
-        $("<div/>", {
-            'id' : i_selector_css,
-            'class' : 'result'
-        }).appendTo('#people_holder');
+        var row_html = "<tr>" +
+            "<th scope='row' id='" + row_id_attr + "'><input type='checkbox' checked></th>" +
+            "<td class='name_link' href='" + i_result.profile_url + "'>" + i_result.fullName + "</td>" +
+            "<td>" + i_result.job_title + "</td>" +
+            "<td>" + i_result.employer + "</td>" +
+            "</tr>";
 
-        $("<input/>", {
-            'type': 'checkbox'
-        }).prop('checked', true).appendTo(i_selector);
-
-        $("<a/>", {
-            'class': 'person_name',
-            'text' : i_result.fullName,
-            'href': i_result.profile_url
-        }).appendTo(i_selector);
-
-        $("<div/>", {
-            'class': 'job_title',
-            'text': i_result.job_title_employer
-        }).appendTo(i_selector);
-
-        $("<div/>", {
-            'class': 'metro',
-            'text': i_result.metro_location
-        }).appendTo(i_selector);
-
-        $("<img>", {
-            'class': 'picture',
-            'src': i_result.picture_url // TODO Don't hotlink image
-        }).appendTo(i_selector);
+        $('#results_body').append(row_html)
 
     }
-    allowExtraction();
 }
 
 // After styleResults is called, make Begin Extraction Available
-
-function allowExtraction() {
-    $("<button/>", {
-        'id': 'extract',
-        'text': 'Begin Extraction'
-    }).appendTo('#buttonDiv');
-    document.querySelector("#extract").addEventListener('click', makeExtractList);
-    document.querySelector("#list").removeEventListener('click', handleButton); // TODO Readd event listener
-
-}
 
 
 function cleanURL(old_url) {
