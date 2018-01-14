@@ -210,21 +210,21 @@ function cleanURL(old_url) {
 function makeExtractList (){
     // Generate array of URL's that have been selected
     var checked_profiles = [];
-    var popup_profiles = $(".name_link");
-    var popup_checkboxes = $("input");
-    var popup_name_links = $("td.name_link");
+    var profile_links = $(".name_link");
+    var popup_checkboxes = $("#results_body input");
 
-    for (var i = 0; i < popup_profiles.length; i++) {
-        var i_profile = popup_profiles.eq(i);
+
+    for (var i = 0; i < profile_links.length; i++) {
+        var i_profile = profile_links.eq(i);
         var i_checkbox = popup_checkboxes.eq(i);
         if (i_checkbox.prop('checked') === true) {
             // if checkbox is checked
             // get the post_data_url so we can make a request
-            var i_url = cleanURL(popup_name_links.eq(i).prop('data'));
+            var i_url = cleanURL(i_profile.attr('data'));
             checked_profiles.push(i_url);
         }
         // only send list when complete
-        if (i === popup_profiles.length - 1) {
+        if (i === profile_links.length - 1) {
             sendPageList(checked_profiles);
         }
     }
