@@ -180,8 +180,18 @@ function styleResults(SearchResults){
             "</tr>";
 
         $('#results_body').append(row_html)
-
     }
+    // Add event listener for select all checkbox
+    $('#select_all').on('click', masterCheckboxListen);
+}
+
+// Function that applies the checked attribute of the 'select all' checkbox to all other checkboxes
+
+function masterCheckboxListen() {
+    // Check the 'checked' property on click. The property is evaluated AFTER the click. Checked to unchecked
+    // shows False
+    var masterCheckboxChecked= $('#select_all').prop('checked');
+    $("#results_body tr th[scope='row'] input").prop('checked', masterCheckboxChecked);
 }
 
 // After styleResults is called, make Begin Extraction Available
