@@ -70,9 +70,10 @@ function append_html(id, html, callback) {
 
 
 function show_action() {
-    var action_buttons = $.parseHTML("<div id='action_buttons' class='btn-toolbar d-flex justify-content-center' role='toolbar'> <div class='btn-group mr-2' role='group'> <button type='button' class='btn btn-primary'>Select Profiles</button> </div> <div class='btn-group mr-2' role='group'> <button type='button' class='btn btn-secondary'>Extract Profiles</button> </div> </div>");
+    var action_buttons = $.parseHTML("<div id='action_buttons' class='btn-toolbar d-flex justify-content-center' role='toolbar'> <div class='btn-group mr-2' role='group'> <button type='button' class='btn btn-primary'>Select Profiles</button> <button type='button' class='btn btn-secondary'>Extract Profiles</button> </div>  <button type='button' class='btn btn-light' id='logout_button'>Logout</button> </div> </div>");
     $('#actions').append(action_buttons);
-    // TODO Add event listens for the buttons
+    // TODO Add event listens for the action buttons
+    $('#logout_button').on('click', doLogout);
 }
 
 function show_login_error() {
@@ -86,6 +87,11 @@ function new_login() {
     show_action();
 }
 
+function new_logout() {
+    $('#action_buttons').remove();
+    show_login();
+}
+
 /*
 
 /*
@@ -94,6 +100,8 @@ Messaging Functions
 ===================
 
 doLogin - event listener for user pressing login button
+doLogout - event listener for user pressing logout button. Sets 'token' to null in chrome storage and changes popup to login
+
 
 credToBackground - sends the values to background.js for handling
 
@@ -105,6 +113,11 @@ function doLogin() {
     var password = $('#user_pass').val();
     var auth_string = username + ":" + password;
     credToBackground(auth_string);
+}
+
+function doLogout() {
+    chrome.storage.sync.set({'token': null});
+    new_logout();
 }
 
 function credToBackground(auth_string){
