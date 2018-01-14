@@ -174,7 +174,7 @@ function styleResults(SearchResults){
 
         var row_html = "<tr>" +
             "<th scope='row' id='" + row_id_attr + "'><input type='checkbox' checked></th>" +
-            "<td class='name_link' href='" + i_result.profile_url + "'>" + i_result.fullName + "</td>" +
+            "<td class='name_link' data='" + i_result.profile_url + "'>" + i_result.fullName + "</td>" +
             "<td>" + i_result.job_title + "</td>" +
             "<td>" + i_result.employer + "</td>" +
             "</tr>";
@@ -200,17 +200,17 @@ function cleanURL(old_url) {
 function makeExtractList (){
     // Generate array of URL's that have been selected
     var checked_profiles = [];
-    var popup_profiles = $("#people_holder").find("div");
+    var popup_profiles = $(".name_link");
     var popup_checkboxes = $("input");
-    var popup_name_links = $("a.person_name");
+    var popup_name_links = $("td.name_link");
 
     for (var i = 0; i < popup_profiles.length; i++) {
-        var i_profile = popup_profiles[i];
+        var i_profile = popup_profiles.eq(i);
         var i_checkbox = popup_checkboxes.eq(i);
         if (i_checkbox.prop('checked') === true) {
             // if checkbox is checked
             // get the post_data_url so we can make a request
-            var i_url = cleanURL(popup_name_links.eq(i).prop('href'));
+            var i_url = cleanURL(popup_name_links.eq(i).prop('data'));
             checked_profiles.push(i_url);
         }
         // only send list when complete
