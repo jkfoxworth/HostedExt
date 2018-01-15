@@ -56,6 +56,7 @@ function getAuth(auth_encoded, callback, sendResponse){
         },
         success: function (data){
             var json_data = JSON.stringify(data);
+            token = json_data;
             callback(json_data, sendResponse);
         },
         error: function(data) {
@@ -120,6 +121,13 @@ Storage Functions
 ================
 
  */
+function retrieve_token(json_data){
+    chrome.storage.sync.get('token', function (items) {
+        postData(json_data, JSON.parse(items.token)['token']);
+    })
+}
+
+
 
 // Check for user state
 function check_token(callback, responsecallback) {
@@ -238,7 +246,7 @@ function finishJSON(code, counter, urls) {
     var s = function () {
         var c = JSON.stringify(code);
         dataToPopup(c, counter, urls);
-        filter_json(c, postDataBulk);
+        filter_json(c, retrieve_token);
     };
     s();
 
@@ -277,7 +285,8 @@ function requestPages(counter, urls) {
     });
 }
 
-function postDataBulk(filtered_ajax) {
+
+function postData(filtered_ajax, user_token) {
     var xhttp;
     xhttp = new XMLHttpRequest();
     xhttp.onreadystatechange = function () {
@@ -287,10 +296,14 @@ function postDataBulk(filtered_ajax) {
     };
     xhttp.open("POST", post_data_url, true);
     xhttp.setRequestHeader("Content-type", "application/json");
+    xhttp.setRequestHeader('Api-Key', user_token);
 
     var data = JSON.stringify({'data':filtered_ajax});
     xhttp.send(data);
 }
+
+
+
 function getRandomInt(min, max) {
     min = Math.ceil(min)*1000;
     max = Math.floor(max)*1000;

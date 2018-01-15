@@ -70,9 +70,8 @@ function append_html(id, html, callback) {
 
 
 function show_action() {
-    var action_buttons = $.parseHTML("<div id='action_buttons' class='btn-toolbar d-flex justify-content-center' role='toolbar'> <div class='btn-group mr-2' role='group'> <button type='button' class='btn btn-primary' id='select_profiles_button'>Select Profiles</button> <button type='button' class='btn btn-secondary' id='extract_profiles_button'>Extract Profiles</button> </div>  <button type='button' class='btn btn-light' id='logout_button'>Logout</button> </div> </div>");
+    var action_buttons = $.parseHTML("<div id='action_buttons' class='btn-toolbar d-flex justify-content-center' role='toolbar'> <div class='btn-group mr-2' role='group'> <button type='button' class='btn btn-primary' id='select_profiles_button'>Select Profiles</button> <button type='button' class='btn btn-secondary disabled' id='extract_profiles_button'>Extract Profiles</button> </div>  <button type='button' class='btn btn-light' id='logout_button'>Logout</button> </div> </div>");
     $('#actions').append(action_buttons);
-    // TODO Add event listens for the extract button
     $('#logout_button').on('click', doLogout);
     $('#select_profiles_button').on('click', requestResults);
 }
@@ -91,6 +90,12 @@ function new_login() {
 function new_logout() {
     $('#action_buttons').remove();
     show_login();
+}
+
+function allow_extraction() {
+    // Change CSS to show extract button is enabled
+    $('#extract_profiles_button').prop('class', 'btn btn-secondary');
+    $('#extract_profiles_button').on('click', makeExtractList);
 }
 
 /*
@@ -150,7 +155,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     }
 });
 
-// TODO Get this in Bootstrap form
+// TODO Replace this with loading icon or progress bar
 function styleAjax(data){
     $(".result").remove(); // Remove any result elements making room for responses
     $("<p/>", {
@@ -183,6 +188,7 @@ function styleResults(SearchResults){
     }
     // Add event listener for select all checkbox
     $('#select_all').on('click', masterCheckboxListen);
+    allow_extraction();
 }
 
 // Function that applies the checked attribute of the 'select all' checkbox to all other checkboxes
@@ -243,11 +249,3 @@ function sendPageList(checked_profiles)  {
         });
 }
 // Function that handles button
-
-function handleButton() {
-    // fetch the people
-    requestResults();
-}
-
-// Event listener that listens for list button being clicked
-
