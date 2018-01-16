@@ -10,6 +10,9 @@ var post_data_url = "http://127.0.0.1:5000/api/v1/profiles";
 var auth_url = "http://127.0.0.1:5000/api/v1/token";
 // var auth_url = "http://estasney1.pythonanywhere.com/api/v1/token";
 
+var confirm_auth_url = "http://127.0.0.1:5000/api/v1/test_token";
+// var confirm_auth_url = "http://estasney1.pythonanywhere.com/api/v1/test_token";
+
 /*
 
 Login Handlers
@@ -22,8 +25,41 @@ function handle_token_check(token, callback) {
     if (token === false) {
         show_login(callback);
     } else {
-        show_action_page(callback);
+        (function() {
+            chrome.storage.sync.get('token', function (items) {
+                validateToken(JSON.parse(items.token)['token'], callback);
+            })
+        })();
     }
+}
+
+// confirms valid token
+
+function validateToken(token, callback) {
+    $.ajax({
+        type: 'GET',
+        async: true,
+        timeout: 10000,
+        url: confirm_auth_url,
+        dataType: 'json',
+        statusCode: {
+            404: function() {
+                show_login(callback);
+            }
+        },
+        beforeSend: function (xhr) {
+            xhr.setRequestHeader('Accept', 'application/json, text/javascript, */*; q=0.01');
+            xhr.setRequestHeader('Accept-Language', 'en-US,en;q=0.8');
+            xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+            xhr.setRequestHeader('Api-Key', token);
+        },
+        success: function (){
+            show_action_page(callback);
+        },
+        error: function(data) {
+            show_login(callback);
+        }
+    });
 }
 
 // @purpose base64 encoding auth string
