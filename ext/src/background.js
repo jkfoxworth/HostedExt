@@ -13,6 +13,9 @@ var auth_url = "http://127.0.0.1:5000/api/v1/token";
 var confirm_auth_url = "http://127.0.0.1:5000/api/v1/test_token";
 // var confirm_auth_url = "http://estasney1.pythonanywhere.com/api/v1/test_token";
 
+var cache_url = "http://127.0.0.1:5000/api/v1/fetch";
+// var cache_url = "http://estasney1.pythonanywhere.com/api/v1/fetch";
+
 /*
 
 Login Handlers
@@ -92,7 +95,7 @@ function getAuth(auth_encoded, callback, sendResponse){
         },
         success: function (data){
             var json_data = JSON.stringify(data);
-            token = json_data;
+            token = JSON.parse(json_data)['token'];
             callback(json_data, sendResponse);
         },
         error: function(data) {
@@ -140,17 +143,6 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     }
 });
 
-
-
-
-// TODO Confirm valid token with server
-
-
-
-
-
-
-
 /*
 
 Storage Functions
@@ -190,15 +182,8 @@ function check_token(callback, responsecallback) {
 // Set user state
 function store_token(token_value, sendResponse) {
     chrome.storage.sync.set({'token': token_value});
-    sendResponse({'action': 'login success'})
+    sendResponse({'action': 'login success'});
 }
-
-
-
-// Hold the AJAX responses in background.js
-// TODO Write Constructor That Accepts JSON, parses to Object
-
-var datastore = [];
 
 // Filtering AJAX response to send to server
 // Callback will be to send AJAX once parsed
@@ -234,6 +219,8 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
         // console.log("Received list of profiles");
         requestPages(0, request.checked);
         sendResponse();
+    } else if (request.action === 'download') {
+        requestDownload();
     }
 });
 
@@ -278,7 +265,6 @@ function startJSON(raw, start_code, end_code, counter, urls){
 }
 
 function finishJSON(code, counter, urls) {
-    datastore.push(code);
     var s = function () {
         var c = JSON.stringify(code);
         dataToPopup(c, counter, urls);
@@ -303,7 +289,12 @@ function dataToPopup(response, counter, urls) {
         if (counter < end_counter) {
             requestPages(counter, urls);
         } else {
-            // console.log("Done with AJAX Pages");
+            chrome.runtime.sendMessage(
+                {action: 'allow download'},
+                function (response) {
+
+                }
+            )
         }
     }, getRandomInt(5, 8));
 }
@@ -319,6 +310,21 @@ function requestPages(counter, urls) {
             startPattern(response.data, counter, urls); // Callback called when response is received
         });
     });
+}
+
+function requestDownload() {
+    var xhttp;
+    xhttp = new XMLHttpRequest();
+    xhttp.onreadystatechange = function () {
+        if (this.readyState === 4 && this.status === 200) {
+            console.log("Response from download request");
+            console.log(this.responseText);
+        }
+    };
+    xhttp.open("GET", cache_url, true);
+    xhttp.setRequestHeader("Content-type", "application/json");
+    xhttp.setRequestHeader('Api-Key', token);
+    xhttp.send();
 }
 
 

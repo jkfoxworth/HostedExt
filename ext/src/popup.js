@@ -25,7 +25,7 @@ handleUserState()
 
 */
 
-function handleUserState(response){
+function handleUserState(response) {
     if (response.action === "show login") {
         show_login();
     } else if (response.action === 'show actions') {
@@ -70,7 +70,7 @@ function append_html(id, html, callback) {
 
 
 function show_action() {
-    var action_buttons = $.parseHTML("<div id='action_buttons' class='btn-toolbar d-flex justify-content-center' role='toolbar'> <div class='btn-group mr-2' role='group'> <button type='button' class='btn btn-primary' id='select_profiles_button'>Select Profiles</button> <button type='button' class='btn btn-secondary disabled' id='extract_profiles_button'>Extract Profiles</button> </div>  <button type='button' class='btn btn-light' id='logout_button'>Logout</button> </div> </div>");
+    var action_buttons = $.parseHTML("<div id='action_buttons' class='btn-toolbar d-flex justify-content-center' role='toolbar'> <div class='btn-group mr-2' role='group'> <button type='button' class='btn btn-primary' id='select_profiles_button'>Select</button> <button type='button' class='btn btn-secondary disabled' id='extract_profiles_button'>Extract</button> <button type='button' class='btn btn-success disabled' id='download_profiles_button'>Download</button></div>  <button type='button' class='btn btn-light' id='logout_button'>Logout</button> </div> </div>");
     $('#actions').append(action_buttons);
     $('#logout_button').on('click', doLogout);
     $('#select_profiles_button').on('click', requestResults);
@@ -96,6 +96,11 @@ function allow_extraction() {
     // Change CSS to show extract button is enabled
     $('#extract_profiles_button').prop('class', 'btn btn-secondary');
     $('#extract_profiles_button').on('click', makeExtractList);
+}
+
+function allow_download() {
+    $('#download_profiles_button').prop('class', 'btn btn-success');
+    $('#download_profiles_button').on('click', requestDownload);
 }
 
 /*
@@ -152,6 +157,8 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
         sendResponse();
     } else if (request.action === 'new_ajax') {
         styleAjax(request.data); // Parsed JSON
+    } else if (request.action === 'allow download'){
+        allow_download();
     }
 });
 
@@ -248,4 +255,13 @@ function sendPageList(checked_profiles)  {
             // console.log(response);
         });
 }
-// Function that handles button
+
+// Send message to background to start download
+
+function requestDownload() {
+    chrome.runtime.sendMessage(
+        {action: 'download'},
+        function (response) {
+            // console.log(response);
+        });
+}
