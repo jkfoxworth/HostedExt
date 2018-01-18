@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Hermes"/>
+    <link href="js/bootstrap/css/bootstrap.css" rel="stylesheet" type="text/css" />
+    <style type="text/css">
+        #mainPopup {
+            padding: 10px;
+            height: 800px;
+            width: 400px;
+            font-family: Helvetica, Ubuntu, Arial, sans-serif;
+        }
+
+    </style>
+    <title>Hermes</title>
+</head>
+<body>
+<div id="mainPopup" class="container-fluid">
+<div id="actions" class="container-fluid"></div>
+<div id="results" class="container-fluid">
+
+    <table class="table invisible" id="results_table">
+        <thead class="thead-dark">
+        <tr>
+            <th scope="col"><input id="select_all" type="checkbox" checked></th>
+            <th scope="col">Name</th>
+            <th scope="col">Position</th>
+            <th scope="col">Company</th>
+        </tr>
+        </thead>
+        <tbody id="results_body">
+
+        </tbody>
+    </table>
+
+</div>
+</div>
+
+<script src="js/jquery/jquery.js"></script>
+<script src="js/bootstrap/js/bootstrap.js"></script>
+<script src='popup.js'></script>
+</body>
+</html>

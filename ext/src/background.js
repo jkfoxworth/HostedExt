@@ -1,10 +1,198 @@
 // background.js
 
+var token;
+
 // Destination URL
 // Local testing with Flask
-var url = "http://127.0.0.1:5000/api/v1/profiles";
+var post_data_url = "http://127.0.0.1:5000/api/v1/profiles";
+// var post_data_url = "http://estasney1.pythonanywhere.com/api/v1/profiles";
 
-// var url = "http://estasney1.pythonanywhere.com/api/v1/profiles";
+var auth_url = "http://127.0.0.1:5000/api/v1/token";
+// var auth_url = "http://estasney1.pythonanywhere.com/api/v1/token";
+
+var confirm_auth_url = "http://127.0.0.1:5000/api/v1/test_token";
+// var confirm_auth_url = "http://estasney1.pythonanywhere.com/api/v1/test_token";
+
+/*
+
+Login Handlers
+==============
+
+ */
+
+// @purpose determines if popup.html should be login or action
+function handle_token_check(token, callback) {
+    if (token === false) {
+        show_login(callback);
+    } else {
+        (function() {
+            chrome.storage.sync.get('token', function (items) {
+                validateToken(JSON.parse(items.token)['token'], callback);
+            })
+        })();
+    }
+}
+
+// confirms valid token
+
+function validateToken(token, callback) {
+    $.ajax({
+        type: 'GET',
+        async: true,
+        timeout: 10000,
+        url: confirm_auth_url,
+        dataType: 'json',
+        statusCode: {
+            404: function() {
+                show_login(callback);
+            }
+        },
+        beforeSend: function (xhr) {
+            xhr.setRequestHeader('Accept', 'application/json, text/javascript, */*; q=0.01');
+            xhr.setRequestHeader('Accept-Language', 'en-US,en;q=0.8');
+            xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+            xhr.setRequestHeader('Api-Key', token);
+        },
+        success: function (){
+            show_action_page(callback);
+        },
+        error: function(data) {
+            show_login(callback);
+        }
+    });
+}
+
+// @purpose base64 encoding auth string
+function doEncoding(auth_string, sendResponse) {
+    var auth_encoded = btoa(auth_string);
+    getAuth(auth_encoded, store_token, sendResponse);
+}
+
+
+// @purpose requests api_key/token from external server
+// @calls callback on success
+//
+function getAuth(auth_encoded, callback, sendResponse){
+    $.ajax({
+        type: 'POST',
+        async: true,
+        timeout: 10000,
+        url: auth_url,
+        dataType: 'json',
+        statusCode: {
+            404: function(data) {
+                show_login_error(sendResponse);
+            }
+        },
+        beforeSend: function (xhr) {
+            xhr.setRequestHeader('Accept', 'application/json, text/javascript, */*; q=0.01');
+            xhr.setRequestHeader('Accept-Language', 'en-US,en;q=0.8');
+            xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+            xhr.setRequestHeader('Authorization', 'Basic ' + auth_encoded);
+        },
+        success: function (data){
+            var json_data = JSON.stringify(data);
+            token = json_data;
+            callback(json_data, sendResponse);
+        },
+        error: function(data) {
+            show_login_error(sendResponse);
+        }
+    });
+}
+
+// User is logged in, display actions
+
+function show_action_page(callback) {
+    callback({action: 'show actions'});
+}
+
+// User is not logged in, show login error
+
+function show_login(callback) {
+    callback({action: 'show login'});
+}
+
+function show_login_error(callback) {
+    console.log('telling popup of error');
+    callback({action: 'login fail'});
+}
+
+
+
+
+
+/*
+
+Login Event Listeners
+====================
+
+*/
+
+// Called when popup is opened
+chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+    if (request.action === "get user state") {
+        check_token(handle_token_check, sendResponse);
+        return true;
+    } else if (request.action === "user login submit") {
+        doEncoding(request.data, sendResponse);
+        return true;
+    }
+});
+
+
+
+
+// TODO Confirm valid token with server
+
+
+
+
+
+
+
+/*
+
+Storage Functions
+================
+
+ */
+function retrieve_token(json_data){
+    chrome.storage.sync.get('token', function (items) {
+        postData(json_data, JSON.parse(items.token)['token']);
+    })
+}
+
+
+
+// Check for user state
+function check_token(callback, responsecallback) {
+    chrome.storage.sync.get('token', function (items) {
+        if (items) {
+            try {
+                if (items.token.length != null) {
+                    callback(items.token, responsecallback);
+                } else {
+                    callback(false, responsecallback);
+                }
+            }
+            catch (e) {
+                callback(false, responsecallback);
+            }
+
+
+        } else {
+            callback(false, responsecallback);
+        }
+    });
+}
+
+// Set user state
+function store_token(token_value, sendResponse) {
+    chrome.storage.sync.set({'token': token_value});
+    sendResponse({'action': 'login success'})
+}
+
 
 
 // Hold the AJAX responses in background.js
@@ -94,7 +282,7 @@ function finishJSON(code, counter, urls) {
     var s = function () {
         var c = JSON.stringify(code);
         dataToPopup(c, counter, urls);
-        filter_json(c, postDataBulk);
+        filter_json(c, retrieve_token);
     };
     s();
 
@@ -133,7 +321,8 @@ function requestPages(counter, urls) {
     });
 }
 
-function postDataBulk(filtered_ajax) {
+
+function postData(filtered_ajax, user_token) {
     var xhttp;
     xhttp = new XMLHttpRequest();
     xhttp.onreadystatechange = function () {
@@ -141,12 +330,16 @@ function postDataBulk(filtered_ajax) {
             console.log("Bulk message success");
         }
     };
-    xhttp.open("POST", url, true);
+    xhttp.open("POST", post_data_url, true);
     xhttp.setRequestHeader("Content-type", "application/json");
+    xhttp.setRequestHeader('Api-Key', user_token);
 
     var data = JSON.stringify({'data':filtered_ajax});
     xhttp.send(data);
 }
+
+
+
 function getRandomInt(min, max) {
     min = Math.ceil(min)*1000;
     max = Math.floor(max)*1000;
