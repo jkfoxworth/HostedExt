@@ -75,6 +75,7 @@ function ajaxGet(url, callback){
             xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
         },
         complete: function (data){
+            console.log(data);
             callback({'action': 'ajax_done', 'data': data.responseText});
         }
     });

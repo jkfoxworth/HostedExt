@@ -29,7 +29,9 @@ function handleUserState(response) {
     if (response.action === "show login") {
         show_login();
     } else if (response.action === 'show actions') {
-        show_action();
+        show_action(false);
+    } else if (response.action === 'show actions download') {
+        show_action(true);
     } else if (response.action === 'show login error') {
         show_login_error();
     }
@@ -67,13 +69,14 @@ function append_html(id, html, callback) {
     callback();
 }
 
-
-
-function show_action() {
+function show_action(download) {
     var action_buttons = $.parseHTML("<div id='action_buttons' class='btn-toolbar d-flex justify-content-center' role='toolbar'> <div class='btn-group mr-2' role='group'> <button type='button' class='btn btn-primary' id='select_profiles_button'>Select</button> <button type='button' class='btn btn-secondary disabled' id='extract_profiles_button'>Extract</button> <button type='button' class='btn btn-success disabled' id='download_profiles_button'>Download</button></div>  <button type='button' class='btn btn-light' id='logout_button'>Logout</button> </div> </div>");
     $('#actions').append(action_buttons);
     $('#logout_button').on('click', doLogout);
     $('#select_profiles_button').on('click', requestResults);
+    if (download===true) {
+        allow_download();
+    }
 }
 
 function show_login_error() {

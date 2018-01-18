@@ -1,9 +1,17 @@
 // background.js
 
-var token;
+/*
 
-// Destination URL
-// Local testing with Flask
+GLOBALS
+=======
+
+*/
+
+var token;
+var can_download;
+
+// Uncomment as needed for local/live
+
 var post_data_url = "http://127.0.0.1:5000/api/v1/profiles";
 // var post_data_url = "http://estasney1.pythonanywhere.com/api/v1/profiles";
 
@@ -18,17 +26,25 @@ var cache_url = "http://127.0.0.1:5000/api/v1/fetch";
 
 /*
 
-Login Handlers
+----------
+END GLOBALS
+
+*/
+
+
+/*
+
+LOGIN HANDLERS
 ==============
 
  */
 
-// @purpose determines if popup.html should be login or action
+// determines if popup.html should be login or action
 function handle_token_check(token, callback) {
     if (token === false) {
         show_login(callback);
     } else {
-        (function() {
+        (function () {
             chrome.storage.sync.get('token', function (items) {
                 validateToken(JSON.parse(items.token)['token'], callback);
             })
@@ -36,7 +52,7 @@ function handle_token_check(token, callback) {
     }
 }
 
-// confirms valid token
+// confirms valid token with server
 
 function validateToken(token, callback) {
     $.ajax({
@@ -46,7 +62,7 @@ function validateToken(token, callback) {
         url: confirm_auth_url,
         dataType: 'json',
         statusCode: {
-            404: function() {
+            404: function () {
                 show_login(callback);
             }
         },
@@ -56,26 +72,26 @@ function validateToken(token, callback) {
             xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
             xhr.setRequestHeader('Api-Key', token);
         },
-        success: function (){
+        success: function () {
             show_action_page(callback);
         },
-        error: function(data) {
+        error: function (data) {
             show_login(callback);
         }
     });
 }
 
-// @purpose base64 encoding auth string
+//  base64 encoding auth string
 function doEncoding(auth_string, sendResponse) {
     var auth_encoded = btoa(auth_string);
     getAuth(auth_encoded, store_token, sendResponse);
 }
 
 
-// @purpose requests api_key/token from external server
-// @calls callback on success
-//
-function getAuth(auth_encoded, callback, sendResponse){
+// requests api_key/token from external server
+// callback on success
+// sets global can_download can_extract to false
+function getAuth(auth_encoded, callback, sendResponse) {
     $.ajax({
         type: 'POST',
         async: true,
@@ -83,7 +99,7 @@ function getAuth(auth_encoded, callback, sendResponse){
         url: auth_url,
         dataType: 'json',
         statusCode: {
-            404: function(data) {
+            404: function (data) {
                 show_login_error(sendResponse);
             }
         },
@@ -93,21 +109,25 @@ function getAuth(auth_encoded, callback, sendResponse){
             xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
             xhr.setRequestHeader('Authorization', 'Basic ' + auth_encoded);
         },
-        success: function (data){
+        success: function (data) {
             var json_data = JSON.stringify(data);
             token = JSON.parse(json_data)['token'];
+            can_download = false;
             callback(json_data, sendResponse);
         },
-        error: function(data) {
+        error: function (data) {
             show_login_error(sendResponse);
         }
     });
 }
 
 // User is logged in, display actions
-
 function show_action_page(callback) {
-    callback({action: 'show actions'});
+    if (can_download===false) {
+        callback({action: 'show actions'})
+    } else if (can_download!==false){
+        callback({action: 'show actions download'});
+    }
 }
 
 // User is not logged in, show login error
@@ -120,9 +140,6 @@ function show_login_error(callback) {
     console.log('telling popup of error');
     callback({action: 'login fail'});
 }
-
-
-
 
 
 /*
@@ -149,12 +166,11 @@ Storage Functions
 ================
 
  */
-function retrieve_token(json_data){
+function retrieve_token(json_data) {
     chrome.storage.sync.get('token', function (items) {
         postData(json_data, JSON.parse(items.token)['token']);
     })
 }
-
 
 
 // Check for user state
@@ -203,7 +219,6 @@ function filter_json(code, callback) {
 }
 
 
-
 // Event Listeners
 
 /*
@@ -225,7 +240,6 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 });
 
 
-
 /* Function Chain That Handles Parsing AJAX ResponseText
 
 
@@ -238,7 +252,7 @@ dataToPopup
  */
 function startPattern(raw, counter, urls) {
     var pattern = new RegExp(/<code id="templates\/desktop\/profile\/profile_streaming-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}-content"><!--/, 'gim');
-    var start_code = function() {
+    var start_code = function () {
         var sc = pattern.exec(raw);
         finishPattern(raw, sc, counter, urls);
     };
@@ -255,7 +269,7 @@ function finishPattern(raw, start_code, counter, urls) {
     end_code();
 }
 
-function startJSON(raw, start_code, end_code, counter, urls){
+function startJSON(raw, start_code, end_code, counter, urls) {
     var json_code = function () {
         var code = JSON.parse(raw.substring(start_code.index + start_code[0].length, end_code.index));
         // console.log(code);
@@ -305,7 +319,7 @@ Counter - Int : Defaults to 0. Corresponds to index position of Array
 Urls - Array : Array of Urls
  */
 function requestPages(counter, urls) {
-    chrome.tabs.query({active:true}, function (tabs) { // Query returns active tab
+    chrome.tabs.query({active: true}, function (tabs) { // Query returns active tab
         chrome.tabs.sendMessage(tabs[0].id, {action: 'get_page', target: urls[counter]}, function (response) {
             startPattern(response.data, counter, urls); // Callback called when response is received
         });
@@ -332,23 +346,21 @@ function postData(filtered_ajax, user_token) {
     var xhttp;
     xhttp = new XMLHttpRequest();
     xhttp.onreadystatechange = function () {
-        if (this.readyState === 4 && this.status === 200) {
-            console.log("Bulk message success");
+        if (this.readyState === 4 && this.status === 201) {
+            can_download = true;
         }
     };
     xhttp.open("POST", post_data_url, true);
     xhttp.setRequestHeader("Content-type", "application/json");
     xhttp.setRequestHeader('Api-Key', user_token);
 
-    var data = JSON.stringify({'data':filtered_ajax});
+    var data = JSON.stringify({'data': filtered_ajax});
     xhttp.send(data);
 }
 
-
-
 function getRandomInt(min, max) {
-    min = Math.ceil(min)*1000;
-    max = Math.floor(max)*1000;
+    min = Math.ceil(min) * 1000;
+    max = Math.floor(max) * 1000;
     var calc = Math.floor(Math.random() * (max - min)) + min;
     return calc;
 }
