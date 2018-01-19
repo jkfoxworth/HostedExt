@@ -26,40 +26,27 @@
         
         
 4. Messaging
-    1. How to pass data from content -> bacgkround -> popup?
+    1. How to pass data from content -> background -> popup?
     1. Chrome extension messaging
     1. Introduces complications from asynchronous nature
         
         
 
 ### Todo
-1. Popup - Work in Progress
-    1. Responsive
-        a. Handles various states such as:
-            1. Login
-            2. Show possible actions
-            3. Show Results
-    2. Layout
-        1. Adding bootstrap
-    3. JS
-        1. Add event listeners for various buttons
-        2. Send receive messages with background.js
+1. Popup
+    1. Start A New Session Button
+        2. Requested from server
+        3. API Endpoint forthcoming
+    2. Responsiveness
+        1. After clicking extract, there is a significant to completion
+        2. Inform user of progress 
     
 
 2. Background
-    1. Background will now provide instructions to popup.js for View
-    2. Login Scheme
-        a. Browser Action Detected
-        b. Popup begins as blank
-        c. Background.js checks if user is authorized
-            1. Checks for presence of API key in Chrome.storage
-        d. If no token (first login), instructs popup to show login elements
-        e. If token, confirms it is valid
-            If not, shows login
-    3. Actions
-        a. Show profiles
-    4. Results
-        a. Future        
+    1. Responsiveness
+        1. Message popup.js about progress
+
+            
 
 
 

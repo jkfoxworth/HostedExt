@@ -8,7 +8,6 @@ GLOBALS
 */
 
 var token;
-var can_download;
 
 // Uncomment as needed for local/live
 
@@ -21,8 +20,8 @@ var auth_url = "http://127.0.0.1:5000/api/v1/token";
 var confirm_auth_url = "http://127.0.0.1:5000/api/v1/test_token";
 // var confirm_auth_url = "http://estasney1.pythonanywhere.com/api/v1/test_token";
 
-var cache_url = "http://127.0.0.1:5000/api/v1/fetch";
-// var cache_url = "http://estasney1.pythonanywhere.com/api/v1/fetch";
+// TODO API Endpoint that creates and lists all user session names
+
 
 /*
 
@@ -39,14 +38,14 @@ LOGIN HANDLERS
 
  */
 
-// determines if popup.html should be login or action
+
 function handle_token_check(token, callback) {
     if (token === false) {
-        show_login(callback);
-    } else {
+        show_login(callback); // No user token found, popup.js show login page
+    } else { // A token is found in storage. Is it valid?
         (function () {
             chrome.storage.sync.get('token', function (items) {
-                validateToken(JSON.parse(items.token)['token'], callback);
+                validateToken(JSON.parse(items.token)['token'], callback); // Token validation
             })
         })();
     }
@@ -63,7 +62,7 @@ function validateToken(token, callback) {
         dataType: 'json',
         statusCode: {
             404: function () {
-                show_login(callback);
+                show_login(callback); // Token not accepted, popup show login
             }
         },
         beforeSend: function (xhr) {
@@ -73,15 +72,15 @@ function validateToken(token, callback) {
             xhr.setRequestHeader('Api-Key', token);
         },
         success: function () {
-            show_action_page(callback);
+            show_action_page(callback); // Token accepted, show action buttons
         },
         error: function (data) {
-            show_login(callback);
+            show_login(callback); // Catchall for errors, show login
         }
     });
 }
 
-//  base64 encoding auth string
+//  Function that base64 encodes username:password to use in Authentication header
 function doEncoding(auth_string, sendResponse) {
     var auth_encoded = btoa(auth_string);
     getAuth(auth_encoded, store_token, sendResponse);
@@ -90,7 +89,6 @@ function doEncoding(auth_string, sendResponse) {
 
 // requests api_key/token from external server
 // callback on success
-// sets global can_download can_extract to false
 function getAuth(auth_encoded, callback, sendResponse) {
     $.ajax({
         type: 'POST',
@@ -100,20 +98,19 @@ function getAuth(auth_encoded, callback, sendResponse) {
         dataType: 'json',
         statusCode: {
             404: function (data) {
-                show_login_error(sendResponse);
+                show_login_error(sendResponse); // Credentials are incorrect
             }
         },
         beforeSend: function (xhr) {
             xhr.setRequestHeader('Accept', 'application/json, text/javascript, */*; q=0.01');
             xhr.setRequestHeader('Accept-Language', 'en-US,en;q=0.8');
             xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-            xhr.setRequestHeader('Authorization', 'Basic ' + auth_encoded);
+            xhr.setRequestHeader('Authorization', 'Basic ' + auth_encoded); // "Basic username:password" (base64)
         },
         success: function (data) {
             var json_data = JSON.stringify(data);
-            token = JSON.parse(json_data)['token'];
-            can_download = false;
-            callback(json_data, sendResponse);
+            token = JSON.parse(json_data)['token']; // Store the token in global var, token
+            callback(json_data, sendResponse); // Store the token to chrome storage on receipt
         },
         error: function (data) {
             show_login_error(sendResponse);
@@ -121,16 +118,10 @@ function getAuth(auth_encoded, callback, sendResponse) {
     });
 }
 
-// User is logged in, display actions
+// User is logged in, display action buttons
 function show_action_page(callback) {
-    if (can_download===false) {
         callback({action: 'show actions'})
-    } else if (can_download!==false){
-        callback({action: 'show actions download'});
-    }
 }
-
-// User is not logged in, show login error
 
 function show_login(callback) {
     callback({action: 'show login'});
@@ -303,14 +294,8 @@ function dataToPopup(response, counter, urls) {
         if (counter < end_counter) {
             requestPages(counter, urls);
         } else {
-            chrome.runtime.sendMessage(
-                {action: 'allow download'},
-                function (response) {
-
-                }
-            )
-        }
-    }, getRandomInt(5, 8));
+            active_tab = undefined;
+        }}, getRandomInt(5, 8));
 }
 
 
@@ -318,12 +303,23 @@ function dataToPopup(response, counter, urls) {
 Counter - Int : Defaults to 0. Corresponds to index position of Array
 Urls - Array : Array of Urls
  */
+
+// Global var to store the tab id where extract was called
+var active_tab;
+
 function requestPages(counter, urls) {
-    chrome.tabs.query({active: true}, function (tabs) { // Query returns active tab
-        chrome.tabs.sendMessage(tabs[0].id, {action: 'get_page', target: urls[counter]}, function (response) {
+    if (active_tab) {
+        chrome.tabs.sendMessage(active_tab.id, {action: 'get_page', target: urls[counter]}, function (response) {
             startPattern(response.data, counter, urls); // Callback called when response is received
         });
-    });
+    } else {
+        chrome.tabs.query({active: true}, function (tabs) { // Query returns active tab
+            active_tab = tabs[0];
+            chrome.tabs.sendMessage(tabs[0].id, {action: 'get_page', target: urls[counter]}, function (response) {
+                startPattern(response.data, counter, urls); // Callback called when response is received
+            });
+        });
+    }
 }
 
 function requestDownload() {
@@ -347,7 +343,7 @@ function postData(filtered_ajax, user_token) {
     xhttp = new XMLHttpRequest();
     xhttp.onreadystatechange = function () {
         if (this.readyState === 4 && this.status === 201) {
-            can_download = true;
+            // TODO Update user progress
         }
     };
     xhttp.open("POST", post_data_url, true);
