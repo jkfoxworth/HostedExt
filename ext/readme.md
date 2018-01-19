@@ -11,8 +11,10 @@
     1. HTML
         1. HTML that is displayed as popup
             1. Can include JavaScript (popup.js) with 'script' tag
+            1. *Not* persistent
     1. Js
-    1. *Not* persistent
+        1.
+
         
 
 3. Background
