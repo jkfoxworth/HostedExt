@@ -11,14 +11,14 @@ var token;
 
 // Uncomment as needed for local/live
 
-var post_data_url = "http://127.0.0.1:5000/api/v1/profiles";
-// var post_data_url = "http://estasney1.pythonanywhere.com/api/v1/profiles";
+// var post_data_url = "http://127.0.0.1:5000/api/v1/profiles";
+var post_data_url = "http://estasney1.pythonanywhere.com/api/v1/profiles";
 
-var auth_url = "http://127.0.0.1:5000/api/v1/token";
-// var auth_url = "http://estasney1.pythonanywhere.com/api/v1/token";
+// var auth_url = "http://127.0.0.1:5000/api/v1/token";
+var auth_url = "http://estasney1.pythonanywhere.com/api/v1/token";
 
-var confirm_auth_url = "http://127.0.0.1:5000/api/v1/test_token";
-// var confirm_auth_url = "http://estasney1.pythonanywhere.com/api/v1/test_token";
+// var confirm_auth_url = "http://127.0.0.1:5000/api/v1/test_token";
+var confirm_auth_url = "http://estasney1.pythonanywhere.com/api/v1/test_token";
 
 // TODO API Endpoint that creates and lists all user session names
 
