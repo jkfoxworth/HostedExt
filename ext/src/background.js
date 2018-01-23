@@ -12,13 +12,17 @@ var token;
 // Uncomment as needed for local/live
 
 // var post_data_url = "http://127.0.0.1:5000/api/v1/profiles";
-var post_data_url = "http://estasney1.pythonanywhere.com/api/v1/profiles";
+var post_data_url = "https://estasney1.pythonanywhere.com/api/v1/profiles";
 
 // var auth_url = "http://127.0.0.1:5000/api/v1/token";
-var auth_url = "http://estasney1.pythonanywhere.com/api/v1/token";
+var auth_url = "https://estasney1.pythonanywhere.com/api/v1/token";
 
 // var confirm_auth_url = "http://127.0.0.1:5000/api/v1/test_token";
-var confirm_auth_url = "http://estasney1.pythonanywhere.com/api/v1/test_token";
+var confirm_auth_url = "https://estasney1.pythonanywhere.com/api/v1/test_token";
+
+// var prune_url = "http://127.0.0.1:5000/api/v1/prune"
+var prune_url = "https://estasney1.pythonanywhere.com/api/v1/prune";
+
 
 // TODO API Endpoint that creates and lists all user session names
 
@@ -223,7 +227,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     if (request.action === "checked_profiles") {
         // if it's passing a list of profiles
         // console.log("Received list of profiles");
-        requestPages(0, request.checked);
+        prunePages(request.checked);
         sendResponse();
     } else if (request.action === 'download') {
         requestDownload();
@@ -307,6 +311,24 @@ Urls - Array : Array of Urls
 // Global var to store the tab id where extract was called
 var active_tab;
 
+function prunePages(request) {
+    var xhttp;
+    xhttp = new XMLHttpRequest();
+    xhttp.onreadystatechange = function () {
+        if (this.readyState === 4 && this.status === 201) {
+          console.log(this.responseText);
+          var urls_to_request = JSON.parse(this.responseText)['data'];
+            requestPages(0, urls_to_request);
+        }
+    };
+    xhttp.open("POST", prune_url, true);
+    xhttp.setRequestHeader("Content-type", "application/json");
+    xhttp.setRequestHeader('Api-Key', token);
+
+    var data = JSON.stringify({'data': request});
+    xhttp.send(data);
+}
+
 function requestPages(counter, urls) {
     if (active_tab) {
         chrome.tabs.sendMessage(active_tab.id, {action: 'get_page', target: urls[counter]}, function (response) {
@@ -360,9 +382,3 @@ function getRandomInt(min, max) {
     var calc = Math.floor(Math.random() * (max - min)) + min;
     return calc;
 }
-
-
-
-
-
-
