@@ -188,13 +188,13 @@ function masterCheckboxListen() {
 
 // After styleResults is called, make Begin Extraction Available
 
-
-function cleanURL(old_url) {
-    var newURL = "https://www.linkedin.com/recruiter/profile/";
-    var profile_pointer = old_url.split("?")[0].split("profile/")[1];
-    newURL = newURL + profile_pointer;
-    return newURL;
-}
+//
+// function cleanURL(old_url) {
+//     var newURL = "https://www.linkedin.com/recruiter/profile/";
+//     var profile_pointer = old_url.split("?")[0].split("profile/")[1];
+//     newURL = newURL + profile_pointer;
+//     return newURL;
+// }
 
 // Gets the URLS the user has selected
 // These are passed to background.js
@@ -234,4 +234,3 @@ function sendPageList(checked_profiles)  {
             // console.log(response);
         });
 }
-
