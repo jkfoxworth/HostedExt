@@ -318,7 +318,10 @@ function prunePages(request) {
         if (this.readyState === 4 && this.status === 201) {
           console.log(this.responseText);
           var urls_to_request = JSON.parse(this.responseText)['data'];
+          // prevents fetching undefined
+          if (urls_to_request == true) {
             requestPages(0, urls_to_request);
+          }
         }
     };
     xhttp.open("POST", prune_url, true);
