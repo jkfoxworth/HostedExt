@@ -6,6 +6,8 @@ GLOBALS
 =======
 
 */
+// Global var to store the tab id where extract was called
+var active_tab;
 
 var token;
 
@@ -67,6 +69,9 @@ function validateToken(token, callback) {
         statusCode: {
             404: function () {
                 show_login(callback); // Token not accepted, popup show login
+                // clear stored token
+                chrome.storage.sync.set({'token': null});
+                token = undefined;
             }
         },
         beforeSend: function (xhr) {
@@ -77,6 +82,7 @@ function validateToken(token, callback) {
         },
         success: function () {
             show_action_page(callback); // Token accepted, show action buttons
+            token = token;
         },
         error: function (data) {
             show_login(callback); // Catchall for errors, show login
@@ -227,6 +233,8 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     if (request.action === "checked_profiles") {
         // if it's passing a list of profiles
         // console.log("Received list of profiles");
+        // clear active_tab in case of failed requests earlier
+        active_tab = undefined;
         prunePages(request.checked);
         sendResponse();
     } else if (request.action === 'download') {
@@ -307,10 +315,6 @@ function dataToPopup(response, counter, urls) {
 Counter - Int : Defaults to 0. Corresponds to index position of Array
 Urls - Array : Array of Urls
  */
-
-// Global var to store the tab id where extract was called
-var active_tab;
-
 function prunePages(request) {
     var xhttp;
     xhttp = new XMLHttpRequest();
@@ -319,6 +323,9 @@ function prunePages(request) {
           console.log(this.responseText);
           var urls_to_request = JSON.parse(this.responseText)['data'];
             requestPages(0, urls_to_request);
+        } else if (this.status === 400) {
+          console.log("Needs new token");
+
         }
     };
     xhttp.open("POST", prune_url, true);
@@ -335,7 +342,7 @@ function requestPages(counter, urls) {
             startPattern(response.data, counter, urls); // Callback called when response is received
         });
     } else {
-        chrome.tabs.query({active: true}, function (tabs) { // Query returns active tab
+        chrome.tabs.query({active: true, currentWindow: true}, function (tabs) { // Query returns active tab
             active_tab = tabs[0];
             chrome.tabs.sendMessage(tabs[0].id, {action: 'get_page', target: urls[counter]}, function (response) {
                 startPattern(response.data, counter, urls); // Callback called when response is received

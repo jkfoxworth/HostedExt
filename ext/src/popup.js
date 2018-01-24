@@ -188,14 +188,6 @@ function masterCheckboxListen() {
 
 // After styleResults is called, make Begin Extraction Available
 
-
-function cleanURL(old_url) {
-    var newURL = "https://www.linkedin.com/recruiter/profile/";
-    var profile_pointer = old_url.split("?")[0].split("profile/")[1];
-    newURL = newURL + profile_pointer;
-    return newURL;
-}
-
 // Gets the URLS the user has selected
 // These are passed to background.js
 
@@ -212,7 +204,7 @@ function makeExtractList (){
         if (i_checkbox.prop('checked') === true) {
             // if checkbox is checked
             // get the post_data_url so we can make a request
-            var i_url = cleanURL(i_profile.attr('data'));
+            var i_url = i_profile.attr('data');
             checked_profiles.push(i_url);
         }
         // only send list when complete
@@ -234,4 +226,3 @@ function sendPageList(checked_profiles)  {
             // console.log(response);
         });
 }
-
