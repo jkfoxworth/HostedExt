@@ -1,0 +1,38 @@
+{
+  "name": "Hermes - Alpha",
+  "version": "0.0.6",
+  "manifest_version": 2,
+  "description": "Hermes",
+  "homepage_url": "http://estasney1.pythonanywhere.com",
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+
+  "background": {
+    "scripts": ["src/js/jquery/jquery.js","src/background.js"],
+    "persistent": true
+  },
+  "browser_action": {
+    "default_icon": "icons/icon19.png",
+    "default_title": "Hermes",
+    "default_popup": "src/default.html",
+    "js": ["src/js/jquery/jquery.js", "src/js/bootstrap/js/bootstrap.js"]
+  },
+  "permissions": [
+    "tabs",
+    "storage",
+    "<all_urls>"
+  ],
+  "content_scripts": [{
+    "matches": [
+      "https://www.linkedin.com/recruiter/profile*",
+      "https://www.linkedin.com/recruiter/smartsearch*"
+    ],
+    "js": ["src/js/jquery/jquery.js", "src/inject.js"]
+  }],
+  "externally_connectable": {
+    "matches": ["*://127.0.0.1/*", "*://localhost/*", "*://estasney1.pythonanywhere.com/*"]
+  }
+}
