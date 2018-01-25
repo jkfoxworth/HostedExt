@@ -114,5 +114,3 @@ if(current_url.indexOf("smartsearch") >= 0) {
             }
         })
     }
-
-
