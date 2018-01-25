@@ -87,6 +87,7 @@ function new_login() {
 
 function new_logout() {
     $('#action_buttons').remove();
+    $('#results_body').remove();
     show_login();
 }
 
