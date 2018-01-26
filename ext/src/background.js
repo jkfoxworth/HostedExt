@@ -12,17 +12,23 @@ var active_tab;
 var token;
 
 // Uncomment as needed for local/live
+// run devMode() in background.js console to set all global urls to local
 
-// var post_data_url = "http://127.0.0.1:5000/api/v1/profiles";
+function devMode() {
+  post_data_url = "http://127.0.0.1:5000/api/v1/profiles";
+  auth_url = "http://127.0.0.1:5000/api/v1/token";
+  confirm_auth_url = "http://127.0.0.1:5000/api/v1/test_token";
+  prune_url = "http://127.0.0.1:5000/api/v1/prune";
+  console.log("Dev Mode On, endpoints set to:");
+  console.log(post_data_url);
+  console.log(auth_url);
+  console.log(confirm_auth_url);
+  console.log(prune_url);
+}
+
 var post_data_url = "https://estasney1.pythonanywhere.com/api/v1/profiles";
-
-// var auth_url = "http://127.0.0.1:5000/api/v1/token";
 var auth_url = "https://estasney1.pythonanywhere.com/api/v1/token";
-
-// var confirm_auth_url = "http://127.0.0.1:5000/api/v1/test_token";
 var confirm_auth_url = "https://estasney1.pythonanywhere.com/api/v1/test_token";
-
-// var prune_url = "http://127.0.0.1:5000/api/v1/prune"
 var prune_url = "https://estasney1.pythonanywhere.com/api/v1/prune";
 
 
