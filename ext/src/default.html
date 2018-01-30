@@ -36,34 +36,46 @@
         </div>
         <div class='form-group row d-flex justify-content-center'></div>
       </form>
-      <div class='row d-flex justify-content-center'><button class='btn btn-primary' id='login_button'>Login</button></div>
-
-
-
-      <div id="menu" class="container-fluid hidden"></div>
-      <div id="actions" class="container-fluid hidden"></div>
-      <div id="results" class="container-fluid hidden">
-
-        <table class="table" id="results_table">
-          <thead class="thead-dark">
-            <tr>
-              <th scope="col"><input id="select_all" type="checkbox" checked></th>
-              <th scope="col">Name</th>
-              <th scope="col">Position</th>
-              <th scope="col">Company</th>
-            </tr>
-          </thead>
-          <tbody id="results_body">
-
-          </tbody>
-        </table>
-
+      <div class='alert alert-warning alert-dismissible fade show hidden' id="login_alert" role='alert'> Your credentials were not accepted
+         <button type='button' class='close' data-dismiss='alert' aria-label='Close'>
+          <span aria-hidden='true'>&times;</span>
+         </button>
+       </div>
+      <div class='row d-flex justify-content-center'>
+        <button class='btn btn-primary' id='login_button'>Login</button>
       </div>
     </div>
+    <div id="actions" class="container-fluid hidden">
+      <div id='action_buttons' class='btn-toolbar d-flex justify-content-center' role='toolbar'>
+        <div class='btn-group mr-2' role='group'>
+          <button type='button' class='btn btn-primary' id='select_profiles_button'>Select</button>
+          <button type='button' class='btn btn-secondary disabled' id='extract_profiles_button'>Extract</button>
+          <button type='button' class='btn btn-light' id='logout_button'>Logout</button>
+        </div>
+      </div>
+    </div>
+    <div id="results" class="container-fluid hidden">
 
-    <script src="js/jquery/jquery.js"></script>
-    <script src="js/bootstrap/js/bootstrap.js"></script>
-    <script src='popup.js'></script>
+      <table class="table" id="results_table">
+        <thead class="thead-dark">
+          <tr>
+            <th scope="col"><input id="select_all" type="checkbox" checked></th>
+            <th scope="col">Name</th>
+            <th scope="col">Position</th>
+            <th scope="col">Company</th>
+          </tr>
+        </thead>
+        <tbody id="results_body">
+
+        </tbody>
+      </table>
+
+    </div>
+  </div>
+
+  <script src="js/jquery/jquery.js"></script>
+  <script src="js/bootstrap/js/bootstrap.js"></script>
+  <script src='popup.js'></script>
 </body>
 
 </html>
