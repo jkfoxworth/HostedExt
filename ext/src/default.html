@@ -1,46 +1,81 @@
 <!doctype html>
 <html lang="en">
+
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Hermes"/>
-    <link href="js/bootstrap/css/bootstrap.css" rel="stylesheet" type="text/css" />
-    <style type="text/css">
-        #mainPopup {
-            padding: 10px;
-            height: 800px;
-            width: 400px;
-            font-family: Helvetica, Ubuntu, Arial, sans-serif;
-        }
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Hermes" />
+  <link href="js/bootstrap/css/bootstrap.css" rel="stylesheet" type="text/css" />
+  <style type="text/css">
+    #mainPopup {
+      padding: 10px;
+      height: 800px;
+      width: 400px;
+      font-family: Helvetica, Ubuntu, Arial, sans-serif;
+    }
 
-    </style>
-    <title>Hermes</title>
+    .hidden {
+      display: none;
+    }
+  </style>
+  <title>Hermes</title>
 </head>
-<body>
-<div id="mainPopup" class="container-fluid">
-<div id="menu" class="container-fluid"></div>
-<div id="actions" class="container-fluid"></div>
-<div id="results" class="container-fluid">
 
-    <table class="table invisible" id="results_table">
+<body>
+  <div id="mainPopup" class="container-fluid">
+    <div id="login" class="container-fluid hidden">
+      <form id='login_form'>
+        <div class='form-group row d-flex justify-content-center'>
+          <div class='col-sm-10'>
+            <input class='form-control' id='user_id' placeholder='User ID'>
+          </div>
+        </div>
+        <div class='form-group row d-flex justify-content-center'>
+          <div class='col-sm-10'>
+            <input type='password' class='form-control' id='user_pass' placeholder='Password'> </div>
+        </div>
+        <div class='form-group row d-flex justify-content-center'></div>
+      </form>
+      <div class='alert alert-warning alert-dismissible fade show hidden' id="login_alert" role='alert'> Your credentials were not accepted
+         <button type='button' class='close' data-dismiss='alert' aria-label='Close'>
+          <span aria-hidden='true'>&times;</span>
+         </button>
+       </div>
+      <div class='row d-flex justify-content-center'>
+        <button class='btn btn-primary' id='login_button'>Login</button>
+      </div>
+    </div>
+    <div id="actions" class="container-fluid hidden">
+      <div id='action_buttons' class='btn-toolbar d-flex justify-content-center' role='toolbar'>
+        <div class='btn-group mr-2' role='group'>
+          <button type='button' class='btn btn-primary' id='select_profiles_button'>Select</button>
+          <button type='button' class='btn btn-secondary disabled' id='extract_profiles_button'>Extract</button>
+          <button type='button' class='btn btn-light' id='logout_button'>Logout</button>
+        </div>
+      </div>
+    </div>
+    <div id="results" class="container-fluid hidden">
+
+      <table class="table" id="results_table">
         <thead class="thead-dark">
-        <tr>
+          <tr>
             <th scope="col"><input id="select_all" type="checkbox" checked></th>
             <th scope="col">Name</th>
             <th scope="col">Position</th>
             <th scope="col">Company</th>
-        </tr>
+          </tr>
         </thead>
         <tbody id="results_body">
 
         </tbody>
-    </table>
+      </table>
 
-</div>
-</div>
+    </div>
+  </div>
 
-<script src="js/jquery/jquery.js"></script>
-<script src="js/bootstrap/js/bootstrap.js"></script>
-<script src='popup.js'></script>
+  <script src="js/jquery/jquery.js"></script>
+  <script src="js/bootstrap/js/bootstrap.js"></script>
+  <script src='popup.js'></script>
 </body>
+
 </html>

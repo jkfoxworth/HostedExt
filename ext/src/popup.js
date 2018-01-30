@@ -54,40 +54,43 @@ DOM Manipulation
 ================
 
  */
+function unhide_element(selector) {
+  var current_class = $(selector).prop('class');
+  var new_class = current_class.replace('hidden', '').trim();
+  $(selector).prop('class', new_class);
+}
+
+function hide_element(selector) {
+  var current_class = $(selector).prop('class');
+  var new_class = current_class + " hidden";
+  $(selector).prop('class', new_class);
+}
+
+
 function show_login() {
-
-    var form = $.parseHTML("<form id='login_form'> <div class='form-group row d-flex justify-content-center'> <div class='col-sm-10'> <input class='form-control' id='user_id' placeholder='User ID'> </div> </div> <div class='form-group row d-flex justify-content-center'> <div class='col-sm-10'> <input type='password' class='form-control' id='user_pass' placeholder='Password'> </div> </div> <div class='form-group row d-flex justify-content-center'></div></form><div class='row d-flex justify-content-center'><button class='btn btn-primary' id='login_button'>Login</button></div>");
-    append_html('#mainPopup', form, function (){
-        $('#login_button').on('click', doLogin);
-    });
+  $('#login_button').on('click', doLogin);
+  unhide_element('#login');
 }
 
-function append_html(id, html, callback) {
-    $(id).append(html);
-    callback();
-}
 
 function show_action() {
-    var action_buttons = $.parseHTML("<div id='action_buttons' class='btn-toolbar d-flex justify-content-center' role='toolbar'> <div class='btn-group mr-2' role='group'> <button type='button' class='btn btn-primary' id='select_profiles_button'>Select</button> <button type='button' class='btn btn-secondary disabled' id='extract_profiles_button'>Extract</button><button type='button' class='btn btn-light' id='logout_button'>Logout</button> </div> </div>");
-    $('#actions').append(action_buttons);
-    $('#logout_button').on('click', doLogout);
-    $('#select_profiles_button').on('click', requestResults);
+  $('#logout_button').on('click', doLogout);
+  $('#select_profiles_button').on('click', requestResults);
+  unhide_element('#actions');
 }
 
 function show_login_error() {
-    var error_alert = $.parseHTML("<div class='alert alert-warning alert-dismissible fade show' role='alert'> Your credentials were not accepted <button type='button' class='close' data-dismiss='alert' aria-label='Close'> <span aria-hidden='true'>&times;</span> </button></div>");
-    $('#login_form').append(error_alert);
+    unhide_element('#login_alert');
 }
 
 function new_login() {
-    $('#login_form').remove();
-    $('#login_button').remove();
+    hide_element('#login');
     show_action();
 }
 
 function new_logout() {
-    $('#action_buttons').remove();
-    $('#results_body').remove();
+    hide_element('#actions');
+    hide_element('#results');
     show_login();
 }
 
