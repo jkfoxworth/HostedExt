@@ -54,18 +54,24 @@ DOM Manipulation
 ================
 
  */
+function unhide_element(selector) {
+  var current_class = $(selector).prop('class');
+  var new_class = current_class.replace('hidden', '').trim();
+  $(selector).prop('class', new_class);
+}
+
+function hide_element(selector) {
+  var current_class = $(selector).prop('class');
+  var new_class = current_class + " hidden";
+  $(selector).prop('class', new_class);
+}
+
+
 function show_login() {
-
-    var form = $.parseHTML("<form id='login_form'> <div class='form-group row d-flex justify-content-center'> <div class='col-sm-10'> <input class='form-control' id='user_id' placeholder='User ID'> </div> </div> <div class='form-group row d-flex justify-content-center'> <div class='col-sm-10'> <input type='password' class='form-control' id='user_pass' placeholder='Password'> </div> </div> <div class='form-group row d-flex justify-content-center'></div></form><div class='row d-flex justify-content-center'><button class='btn btn-primary' id='login_button'>Login</button></div>");
-    append_html('#mainPopup', form, function (){
-        $('#login_button').on('click', doLogin);
-    });
+  $('#login_button').on('click', doLogin);
+  unhide_element('#login');
 }
 
-function append_html(id, html, callback) {
-    $(id).append(html);
-    callback();
-}
 
 function show_action() {
     var action_buttons = $.parseHTML("<div id='action_buttons' class='btn-toolbar d-flex justify-content-center' role='toolbar'> <div class='btn-group mr-2' role='group'> <button type='button' class='btn btn-primary' id='select_profiles_button'>Select</button> <button type='button' class='btn btn-secondary disabled' id='extract_profiles_button'>Extract</button><button type='button' class='btn btn-light' id='logout_button'>Logout</button> </div> </div>");
