@@ -47,6 +47,12 @@ function handleLoginResponse(response){
     }
 }
 
+// Check sync storage for messages from background
+function checkMessages(callback){
+  chrome.storage.sync.get('hermes_messages', function(items) {
+    callback(items.hermes_messages);
+    }
+
 
 /*
 
