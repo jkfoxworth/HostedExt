@@ -1,86 +1,122 @@
-<!doctype html>
+<!DOCTYPE html>
+
 <html lang="en">
-
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Hermes" />
-  <link href="js/bootstrap/css/bootstrap.css" rel="stylesheet" type="text/css" />
-  <style type="text/css">
-    #mainPopup {
-      padding: 10px;
-      height: 800px;
-      width: 400px;
-      font-family: Helvetica, Ubuntu, Arial, sans-serif;
-    }
+	<meta charset="utf-8">
+	<meta content="width=device-width, initial-scale=1.0" name="viewport">
+	<meta content="Hermes" name="description">
+	<link href="js/bootstrap/css/bootstrap.css" rel="stylesheet" type="text/css">
+	<style type="text/css">
+	      #mainPopup {
+	        padding: 10px;
+	        height: 800px;
+	        width: 400px;
+	        font-family: Helvetica, Ubuntu, Arial, sans-serif;
+	      }
 
-    .hidden {
-      display: none;
-    }
-  </style>
-  <title>Hermes</title>
+	      .hidden {
+	        display: none;
+	      }
+	</style>
+
+	<title>Hermes</title>
 </head>
 
 <body>
-  <div id="mainPopup" class="container-fluid">
-    <div id="login" class="container-fluid hidden">
-      <form id='login_form'>
-        <div class='form-group row d-flex justify-content-center'>
-          <div class='col-sm-10'>
-            <input class='form-control' id='user_id' placeholder='User ID'>
-          </div>
-        </div>
-        <div class='form-group row d-flex justify-content-center'>
-          <div class='col-sm-10'>
-            <input type='password' class='form-control' id='user_pass' placeholder='Password'> </div>
-        </div>
-        <div class='form-group row d-flex justify-content-center'></div>
-      </form>
-      <div class='alert alert-warning alert-dismissible fade show hidden' id="login_alert" role='alert'> Your credentials were not accepted
-        <button type='button' class='close' data-dismiss='alert' aria-label='Close'>
-          <span aria-hidden='true'>&times;</span>
-         </button>
-      </div>
-      <div class='row d-flex justify-content-center'>
-        <button class='btn btn-primary' id='login_button'>Login</button>
-      </div>
-    </div>
-    <div id="actions" class="container-fluid hidden">
-      <div id='action_buttons' class='btn-toolbar d-flex justify-content-center' role='toolbar'>
-        <div class='btn-group mr-2' role='group'>
-          <button type='button' class='btn btn-primary' id='select_profiles_button'>Select</button>
-          <button type='button' class='btn btn-secondary disabled' id='extract_profiles_button'>Extract</button>
-          <button type='button' class='btn btn-danger' id='logout_button'>Logout</button>
-          <button type='button' class="btn btn-info" type="button" data-toggle="collapse" data-target="#collapseMessages" aria-expanded="false" aria-controls="collapseMessages">Open Log</button>
-        </div>
-      </div>
-    </div>
-    <div id="results" class="container-fluid hidden">
+	<div class="container-fluid" id="mainPopup">
+		<div class="container-fluid hidden" id="login">
+			<form id='login_form' name="login_form">
+				<div class='form-group row d-flex justify-content-center'>
+					<div class='col-sm-10'>
+						<input class='form-control' id='user_id' placeholder='User ID'>
+					</div>
+				</div>
 
-      <table class="table" id="results_table">
-        <thead class="thead-dark">
-          <tr>
-            <th scope="col"><input id="select_all" type="checkbox" checked></th>
-            <th scope="col">Name</th>
-            <th scope="col">Position</th>
-            <th scope="col">Company</th>
-          </tr>
-        </thead>
-        <tbody id="results_body">
 
-        </tbody>
-      </table>
+				<div class='form-group row d-flex justify-content-center'>
+					<div class='col-sm-10'>
+						<input class='form-control' id='user_pass' placeholder='Password' type='password'>
+					</div>
+				</div>
 
-    </div>
-    <div id="messages" class="container-fluid hidden">
-      <div class="collapse" id="collapseMessages">
-      </div>
-    </div>
-  </div>
 
-  <script src="js/jquery/jquery.js"></script>
-  <script src="js/bootstrap/js/bootstrap.js"></script>
-  <script src='popup.js'></script>
+				<div class='form-group row d-flex justify-content-center'>
+				</div>
+			</form>
+
+
+			<div class='alert alert-warning alert-dismissible fade show hidden' id="login_alert" role='alert'>
+				Your credentials were not accepted <button aria-label='Close' class='close' data-dismiss='alert' type='button'><span aria-hidden='true'>&times;</span></button>
+			</div>
+
+
+			<div class='row d-flex justify-content-center'>
+				<button class='btn btn-primary' id='login_button'>Login</button>
+			</div>
+		</div>
+
+
+		<div class="container-fluid hidden" id="actions">
+			<div class='btn-toolbar d-flex justify-content-center' id='action_buttons' role='toolbar'>
+				<div class='btn-group mr-2' role='group'>
+					<div class='btn-group' role='group'>
+						<button class='btn btn-primary' id='select_button_dropdown' type='button'>Select</button>
+
+						<div aria-labelledby='select_button_dropdown' class='dropdown-menu'>
+							<a class='dropdown-item' id='add_to_cart'>Add To Cart</a> <a class='dropdown-item' id='remove_from_cart'>Remove from Cart</a>
+						</div>
+						<button class='btn btn-primary' id='extract_button_dropdown' type='button'>Extract</button>
+
+						<div aria-labelledby='extract_button_dropdown' class='dropdown-menu'>
+							<a class='dropdown-item' id='start_extract'>Start</a> <a class='dropdown-item' id='pause_extract'>Pause</a> <a class='dropdown-item' id='clear_extract'>Clear</a>
+						</div>
+
+
+						<div class='btn-group' role='group'>
+							<button class='btn btn-primary' id='options_button_dropdown' type='button'>Select</button>
+
+							<div aria-labelledby='options_button_dropdown' class='dropdown-menu'>
+								<a class='dropdown-item' id='logout_button'>Logout</a> <a class='dropdown-item' id='check_balance_button'>Check Balance</a> <a aria-controls="collapseMessages" aria-expanded="false" class='dropdown-item' data-target="#collapseMessages" data-toggle="collapse">Open Log</a>
+							</div>
+						</div>
+					</div>
+				</div>
+
+
+				<div class="container-fluid hidden" id="results">
+					<table class="table" id="results_table">
+						<thead class="thead-dark">
+							<tr>
+								<th scope="col"><input checked id="select_all" type="checkbox">
+								</th>
+
+								<th scope="col">Name</th>
+
+								<th scope="col">Position</th>
+
+								<th scope="col">Company</th>
+							</tr>
+						</thead>
+
+
+						<tbody id="results_body">
+						</tbody>
+					</table>
+				</div>
+
+
+				<div class="container-fluid hidden" id="messages">
+					<div class="collapse" id="collapseMessages">
+					</div>
+				</div>
+			</div>
+			<script src="js/jquery/jquery.js">
+			</script>
+			<script src="js/bootstrap/js/bootstrap.js">
+			</script>
+			<script src='popup.js'>
+			</script>
+		</div>
+	</div>
 </body>
-
 </html>
