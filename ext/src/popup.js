@@ -102,12 +102,6 @@ function new_logout() {
   show_login();
 }
 
-function allow_extraction() {
-  // Change CSS to show extract button is enabled
-  $('#extract_profiles_button').prop('class', 'btn btn-secondary');
-  $('#extract_profiles_button').on('click', makeExtractList);
-}
-
 function show_messages(messages) {
   unhide_element('#messages');
   $('.message_item').remove();
