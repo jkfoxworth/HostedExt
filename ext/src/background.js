@@ -246,226 +246,234 @@ function save_new_message(new_message) {
 function queue_message(new_message, old_messages) {
   var queue = old_messages;
   queue.push(new_message);
-  if (old_messages.length<=10) {
+  if (old_messages.length <= 10) {
     write_message(queue);
   } else {
     queue.shift(); // The oldest message is removed
     write_message(queue);
   }
 }
-function write_message(messages){
-  chrome.storage.sync.set({'hermes_messages': messages});
-}
 
-// Filtering AJAX response to send to server
-// Callback will be to send AJAX once parsed
-function filter_json(code, callback) {
-  var mydata, positions, profile;
-  code = JSON.parse(code);
-  positions = code['data']["positions"] || false;
-  profile = code['data']["profile"] || false;
-  mydata = {};
-  if (positions) {
-    mydata["positions"] = positions;
+function write_message(messages) {
+  chrome.storage.sync.set({
+      'hermes_messages': messages,
+      function() { // announce that new message is written
+        chrome.runtime.sendMessage({
+            action: "new_message"
+          },
+          function(response) {});
+      });
   }
-  if (profile) {
-    mydata["profile"] = profile;
+
+  // Filtering AJAX response to send to server
+  // Callback will be to send AJAX once parsed
+  function filter_json(code, callback) {
+    var mydata, positions, profile;
+    code = JSON.parse(code);
+    positions = code['data']["positions"] || false;
+    profile = code['data']["profile"] || false;
+    mydata = {};
+    if (positions) {
+      mydata["positions"] = positions;
+    }
+    if (profile) {
+      mydata["profile"] = profile;
+    }
+    callback(mydata);
   }
-  callback(mydata);
-}
 
 
-// Event Listeners
+  // Event Listeners
 
-/*
-Sender: Popup.js
-Content: Array of URLS
-On Message: call requestPages()
-Response Sent: None
- */
+  /*
+  Sender: Popup.js
+  Content: Array of URLS
+  On Message: call requestPages()
+  Response Sent: None
+   */
 
-chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
-  if (request.action === "checked_profiles") {
-    // if it's passing a list of profiles
-    // console.log("Received list of profiles");
-    // clear active_tab in case of failed requests earlier
-    active_tab = undefined;
-    prunePages(request.checked);
-    var user_checked_message = "Selected " + request.checked.length + " to extract";
-    console.log(user_checked_message);
-    save_new_message(user_checked_message);
-    sendResponse();
-  } else if (request.action === 'download') {
-    requestDownload();
-  }
-});
-
-
-/* Function Chain That Handles Parsing AJAX ResponseText
-
-
-startPattern
-finishPattern
-startJSON
-finishJSON
-dataToPopup
-
- */
-function startPattern(raw, counter, urls) {
-  var pattern = new RegExp(/<code id="templates\/desktop\/profile\/profile_streaming-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}-content"><!--/, 'gim');
-  var start_code = function() {
-    var sc = pattern.exec(raw);
-    finishPattern(raw, sc, counter, urls);
-  };
-  start_code();
-}
-
-function finishPattern(raw, start_code, counter, urls) {
-  var re = /--><\/code>/gim;
-  var end_code = function() {
-    re.lastIndex = start_code.index + start_code[0].length;
-    var end_code = re.exec(raw);
-    startJSON(raw, start_code, end_code, counter, urls);
-  };
-  end_code();
-}
-
-function startJSON(raw, start_code, end_code, counter, urls) {
-  var json_code = function() {
-    var code = JSON.parse(raw.substring(start_code.index + start_code[0].length, end_code.index));
-    // console.log(code);
-    finishJSON(code, counter, urls);
-  };
-  json_code();
-}
-
-function finishJSON(code, counter, urls) {
-  var s = function() {
-    var c = JSON.stringify(code);
-    dataToPopup(c, counter, urls);
-    filter_json(c, retrieve_token);
-  };
-  s();
-
-}
-
-
-function dataToPopup(response, counter, urls) {
-  var end_counter = urls.length;
-  chrome.runtime.sendMessage({
-      action: "new_ajax",
-      data: response
-    }, // Sends message to popup.js
-    // responseCallback
-    function(response) { // Empty function, do nothing with response
-    });
-
-  counter++; // Increase counter by 1.
-  // Timeout to set random interval between requests
-  setTimeout(function() {
-    if (counter < end_counter) {
-      requestPages(counter, urls);
-    } else {
+  chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
+    if (request.action === "checked_profiles") {
+      // if it's passing a list of profiles
+      // console.log("Received list of profiles");
+      // clear active_tab in case of failed requests earlier
       active_tab = undefined;
+      prunePages(request.checked);
+      var user_checked_message = "Selected " + request.checked.length + " to extract";
+      console.log(user_checked_message);
+      save_new_message(user_checked_message);
+      sendResponse();
+    } else if (request.action === 'download') {
+      requestDownload();
     }
-  }, getRandomInt(5, 8));
-}
-
-
-/* Called from Event Listener.
-Counter - Int : Defaults to 0. Corresponds to index position of Array
-Urls - Array : Array of Urls
- */
-function prunePages(request) {
-  var xhttp;
-  xhttp = new XMLHttpRequest();
-  xhttp.onreadystatechange = function() {
-    if (this.readyState === 4 && this.status === 201) {
-      console.log(this.responseText);
-      var urls_to_request = JSON.parse(this.responseText)['data'];
-      if (urls_to_request.length > 0) {
-        requestPages(0, urls_to_request);
-      };
-      var server_says = "Server says extract " + urls_to_request.length;
-      console.log(server_says);
-      save_new_message(server_says);
-    } else if (this.status === 400 || this.status === 401 || this.status === 404) {
-      var server_says = "Session expired";
-      console.log("server_says");
-      save_new_message(server_says);
-    }
-  };
-  xhttp.open("POST", prune_url, true);
-  xhttp.setRequestHeader("Content-type", "application/json");
-  xhttp.setRequestHeader('Api-Key', token);
-
-  var data = JSON.stringify({
-    'data': request
   });
-  xhttp.send(data);
-}
 
-function requestPages(counter, urls) {
-  if (active_tab) {
-    chrome.tabs.sendMessage(active_tab.id, {
-      action: 'get_page',
-      target: urls[counter]
-    }, function(response) {
-      startPattern(response.data, counter, urls); // Callback called when response is received
+
+  /* Function Chain That Handles Parsing AJAX ResponseText
+
+
+  startPattern
+  finishPattern
+  startJSON
+  finishJSON
+  dataToPopup
+
+   */
+  function startPattern(raw, counter, urls) {
+    var pattern = new RegExp(/<code id="templates\/desktop\/profile\/profile_streaming-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}-content"><!--/, 'gim');
+    var start_code = function() {
+      var sc = pattern.exec(raw);
+      finishPattern(raw, sc, counter, urls);
+    };
+    start_code();
+  }
+
+  function finishPattern(raw, start_code, counter, urls) {
+    var re = /--><\/code>/gim;
+    var end_code = function() {
+      re.lastIndex = start_code.index + start_code[0].length;
+      var end_code = re.exec(raw);
+      startJSON(raw, start_code, end_code, counter, urls);
+    };
+    end_code();
+  }
+
+  function startJSON(raw, start_code, end_code, counter, urls) {
+    var json_code = function() {
+      var code = JSON.parse(raw.substring(start_code.index + start_code[0].length, end_code.index));
+      // console.log(code);
+      finishJSON(code, counter, urls);
+    };
+    json_code();
+  }
+
+  function finishJSON(code, counter, urls) {
+    var s = function() {
+      var c = JSON.stringify(code);
+      dataToPopup(c, counter, urls);
+      filter_json(c, retrieve_token);
+    };
+    s();
+
+  }
+
+
+  function dataToPopup(response, counter, urls) {
+    var end_counter = urls.length;
+    chrome.runtime.sendMessage({
+        action: "new_ajax",
+        data: response
+      }, // Sends message to popup.js
+      // responseCallback
+      function(response) { // Empty function, do nothing with response
+      });
+
+    counter++; // Increase counter by 1.
+    // Timeout to set random interval between requests
+    setTimeout(function() {
+      if (counter < end_counter) {
+        requestPages(counter, urls);
+      } else {
+        active_tab = undefined;
+      }
+    }, getRandomInt(5, 8));
+  }
+
+
+  /* Called from Event Listener.
+  Counter - Int : Defaults to 0. Corresponds to index position of Array
+  Urls - Array : Array of Urls
+   */
+  function prunePages(request) {
+    var xhttp;
+    xhttp = new XMLHttpRequest();
+    xhttp.onreadystatechange = function() {
+      if (this.readyState === 4 && this.status === 201) {
+        console.log(this.responseText);
+        var urls_to_request = JSON.parse(this.responseText)['data'];
+        if (urls_to_request.length > 0) {
+          requestPages(0, urls_to_request);
+        };
+        var server_says = "Server says extract " + urls_to_request.length;
+        console.log(server_says);
+        save_new_message(server_says);
+      } else if (this.status === 400 || this.status === 401 || this.status === 404) {
+        var server_says = "Session expired";
+        console.log("server_says");
+        save_new_message(server_says);
+      }
+    };
+    xhttp.open("POST", prune_url, true);
+    xhttp.setRequestHeader("Content-type", "application/json");
+    xhttp.setRequestHeader('Api-Key', token);
+
+    var data = JSON.stringify({
+      'data': request
     });
-  } else {
-    chrome.tabs.query({
-      active: true,
-      currentWindow: true
-    }, function(tabs) { // Query returns active tab
-      active_tab = tabs[0];
-      chrome.tabs.sendMessage(tabs[0].id, {
+    xhttp.send(data);
+  }
+
+  function requestPages(counter, urls) {
+    if (active_tab) {
+      chrome.tabs.sendMessage(active_tab.id, {
         action: 'get_page',
         target: urls[counter]
       }, function(response) {
         startPattern(response.data, counter, urls); // Callback called when response is received
       });
-    });
+    } else {
+      chrome.tabs.query({
+        active: true,
+        currentWindow: true
+      }, function(tabs) { // Query returns active tab
+        active_tab = tabs[0];
+        chrome.tabs.sendMessage(tabs[0].id, {
+          action: 'get_page',
+          target: urls[counter]
+        }, function(response) {
+          startPattern(response.data, counter, urls); // Callback called when response is received
+        });
+      });
+    }
   }
-}
 
-function requestDownload() {
-  var xhttp;
-  xhttp = new XMLHttpRequest();
-  xhttp.onreadystatechange = function() {
-    if (this.readyState === 4 && this.status === 200) {
-      console.log("Response from download request");
-      console.log(this.responseText);
-    }
-  };
-  xhttp.open("GET", cache_url, true);
-  xhttp.setRequestHeader("Content-type", "application/json");
-  xhttp.setRequestHeader('Api-Key', token);
-  xhttp.send();
-}
+  function requestDownload() {
+    var xhttp;
+    xhttp = new XMLHttpRequest();
+    xhttp.onreadystatechange = function() {
+      if (this.readyState === 4 && this.status === 200) {
+        console.log("Response from download request");
+        console.log(this.responseText);
+      }
+    };
+    xhttp.open("GET", cache_url, true);
+    xhttp.setRequestHeader("Content-type", "application/json");
+    xhttp.setRequestHeader('Api-Key', token);
+    xhttp.send();
+  }
 
 
-function postData(filtered_ajax, user_token) {
-  var xhttp;
-  xhttp = new XMLHttpRequest();
-  xhttp.onreadystatechange = function() {
-    if (this.readyState === 4 && this.status === 201) {
-      // TODO Update user progress
-    }
-  };
-  xhttp.open("POST", post_data_url, true);
-  xhttp.setRequestHeader("Content-type", "application/json");
-  xhttp.setRequestHeader('Api-Key', user_token);
+  function postData(filtered_ajax, user_token) {
+    var xhttp;
+    xhttp = new XMLHttpRequest();
+    xhttp.onreadystatechange = function() {
+      if (this.readyState === 4 && this.status === 201) {
+        // TODO Update user progress
+      }
+    };
+    xhttp.open("POST", post_data_url, true);
+    xhttp.setRequestHeader("Content-type", "application/json");
+    xhttp.setRequestHeader('Api-Key', user_token);
 
-  var data = JSON.stringify({
-    'data': filtered_ajax
-  });
-  xhttp.send(data);
-}
+    var data = JSON.stringify({
+      'data': filtered_ajax
+    });
+    xhttp.send(data);
+  }
 
-function getRandomInt(min, max) {
-  min = Math.ceil(min) * 1000;
-  max = Math.floor(max) * 1000;
-  var calc = Math.floor(Math.random() * (max - min)) + min;
-  return calc;
-}
+  function getRandomInt(min, max) {
+    min = Math.ceil(min) * 1000;
+    max = Math.floor(max) * 1000;
+    var calc = Math.floor(Math.random() * (max - min)) + min;
+    return calc;
+  }
