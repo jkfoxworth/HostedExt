@@ -84,6 +84,7 @@ function show_action() {
   $('#logout_button').on('click', doLogout);
   $('#select_profiles_button').on('click', requestResults);
   unhide_element('#actions');
+  unhide_element('#messages');
 }
 
 function show_login_error() {
