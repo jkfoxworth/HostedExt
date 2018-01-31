@@ -246,6 +246,8 @@ function makeExtractList() {
       var i_url = i_profile.attr('data');
       checked_profiles.push(i_url);
     }
+    // hide the results
+    hide_element('#results');
     // only send list when complete
     if (i === profile_links.length - 1) {
       sendPageList(checked_profiles);
