@@ -189,7 +189,8 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 // Counts urls and displays as badge in add to Cart
 
 function updateCartCount(count) {
-  $('#add_to_cart_count').text = count;
+  $('#add_to_cart_count').prop('textContent', count);
+  unhide_element('#add_to_cart_count');
 }
 
 function styleResults(SearchResults) {
