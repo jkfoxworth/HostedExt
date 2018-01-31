@@ -59,24 +59,32 @@
 		<div class="container-fluid hidden" id="actions">
 			<div class='btn-toolbar d-flex justify-content-center' id='action_buttons' role='toolbar'>
 				<div class='btn-group mr-2' role='group'>
+
 					<div class='btn-group' role='group'>
-						<button class='btn btn-primary' id='select_button_dropdown' type='button'>Select</button>
+            <button class='btn btn-primary dropdown-toggle' id='select_button_dropdown' type='button' data-toggle='dropdown' aria-haspopup="true" aria-expanded="false">Select</button>
 
 						<div aria-labelledby='select_button_dropdown' class='dropdown-menu'>
-							<a class='dropdown-item' id='add_to_cart'>Add To Cart</a> <a class='dropdown-item' id='remove_from_cart'>Remove from Cart</a>
+							<a class='dropdown-item' id='add_to_cart'>Add To Cart</a>
+              <a class='dropdown-item' id='remove_from_cart'>Remove from Cart</a>
 						</div>
-						<button class='btn btn-primary' id='extract_button_dropdown' type='button'>Extract</button>
+
+          <div class='btn-group' role='group'>
+						<button class='btn btn-primary dropdown-toggle' id='extract_button_dropdown' type='button' data-toggle='dropdown' aria-haspopup="true" aria-expanded="false">Extract</button>
 
 						<div aria-labelledby='extract_button_dropdown' class='dropdown-menu'>
-							<a class='dropdown-item' id='start_extract'>Start</a> <a class='dropdown-item' id='pause_extract'>Pause</a> <a class='dropdown-item' id='clear_extract'>Clear</a>
+							<a class='dropdown-item' id='start_extract'>Start</a>
+              <a class='dropdown-item' id='pause_extract'>Pause</a>
+              <a class='dropdown-item' id='clear_extract'>Clear</a>
 						</div>
 
 
 						<div class='btn-group' role='group'>
-							<button class='btn btn-primary' id='options_button_dropdown' type='button'>Select</button>
+							<button class='btn btn-primary dropdown-toggle' id='options_button_dropdown' type='button' data-toggle='dropdown' aria-haspopup="true" aria-expanded="false">Options</button>
 
 							<div aria-labelledby='options_button_dropdown' class='dropdown-menu'>
-								<a class='dropdown-item' id='logout_button'>Logout</a> <a class='dropdown-item' id='check_balance_button'>Check Balance</a> <a aria-controls="collapseMessages" aria-expanded="false" class='dropdown-item' data-target="#collapseMessages" data-toggle="collapse">Open Log</a>
+								<a class='dropdown-item' id='logout_button'>Logout</a>
+                <a class='dropdown-item' id='check_balance_button'>Check Balance</a>
+                <a aria-controls="collapseMessages" aria-expanded="false" class='dropdown-item' data-target="#collapseMessages" data-toggle="collapse">Open Log</a>
 							</div>
 						</div>
 					</div>
