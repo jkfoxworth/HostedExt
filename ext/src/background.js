@@ -155,6 +155,7 @@ function show_login(callback) {
 
 function show_login_error(callback) {
   console.log('telling popup of error');
+  save_new_message('Error logging in');
   callback({
     action: 'login fail'
   });
@@ -225,7 +226,7 @@ function store_token(token_value, sendResponse) {
   });
   token = token_value
   console.log("Setting new token");
-  console.log(token);
+  save_new_message('Login success');
   sendResponse({
     'action': 'login success'
   });
@@ -290,7 +291,9 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     // clear active_tab in case of failed requests earlier
     active_tab = undefined;
     prunePages(request.checked);
-    console.log("Selected " + request.checked.length + " to extract");
+    var user_checked_message = "Selected " + request.checked.length + " to extract";
+    console.log(user_checked_message);
+    save_new_message(user_checked_message);
     sendResponse();
   } else if (request.action === 'download') {
     requestDownload();
@@ -383,10 +386,13 @@ function prunePages(request) {
       if (urls_to_request.length > 0) {
         requestPages(0, urls_to_request);
       };
-      console.log("Server says extract " + urls_to_request.length);
-    } else if (this.status === 400) {
-      console.log("Needs new token");
-
+      var server_says = "Server says extract " + urls_to_request.length;
+      console.log(server_says);
+      save_new_message(server_says);
+    } else if (this.status === 400 || this.status === 401 || this.status === 404) {
+      var server_says = "Session expired";
+      console.log("server_says");
+      save_new_message(server_says);
     }
   };
   xhttp.open("POST", prune_url, true);
