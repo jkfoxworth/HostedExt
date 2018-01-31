@@ -210,8 +210,6 @@ function makeExtractList() {
 
   // Clear the global
   profiles_on_deck = [];
-    }
-  }
 }
 
 
