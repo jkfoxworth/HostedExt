@@ -1,5 +1,6 @@
 // popup.js
 
+var profiles_on_deck = [];
 
 
 chrome.runtime.sendMessage({
@@ -82,7 +83,7 @@ function show_login() {
 
 function show_action() {
   $('#logout_button').on('click', doLogout);
-  $('#select_profiles_button').on('click', requestResults);
+  $('#select_button_dropdown').on('click', requestResults);
   unhide_element('#actions');
   checkMessages(show_messages); // Fetch and display messages
 }
@@ -184,67 +185,31 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 });
 
 // Receives SearchResult object from inject.js
-// Generates HTML on popup.html from objects
+// Stores urls in global
+// Counts urls and displays as badge in add to Cart
+
+function updateCartCount(count) {
+  $('#add_to_cart_count').text = count;
+}
+
 function styleResults(SearchResults) {
-  // Unhide #results
-  unhide_element('#results');
-  // The table is 'invisible' unhide it
-  $('#results_table').prop('class', 'table');
+
+  // Show number in badge
+  updateCartCount(SearchResults.length.toString());
+
   for (var i = 0; i < SearchResults.length; i++) {
-    var i_result = SearchResults[i];
-
-    var row_id_attr = 'row-' + i.toString();
-    var row_id_sel = '#row-' + i.toString();
-
-    var row_html = "<tr>" +
-      "<th scope='row' id='" + row_id_attr + "'><input type='checkbox' checked></th>" +
-      "<td class='name_link' data='" + i_result.profile_url + "'>" + i_result.fullName + "</td>" +
-      "<td>" + i_result.job_title + "</td>" +
-      "<td>" + i_result.employer + "</td>" +
-      "</tr>";
-
-    $('#results_body').append(row_html);
+    profiles_on_deck.push(SearchResult.profile_url);
   }
-  // Add event listener for select all checkbox
-  $('#select_all').on('click', masterCheckboxListen);
-  allow_extraction();
 }
-
-// Function that applies the checked attribute of the 'select all' checkbox to all other checkboxes
-
-function masterCheckboxListen() {
-  // Check the 'checked' property on click. The property is evaluated AFTER the click. Checked to unchecked
-  // shows False
-  var masterCheckboxChecked = $('#select_all').prop('checked');
-  $("#results_body tr th[scope='row'] input").prop('checked', masterCheckboxChecked);
-}
-
-// After styleResults is called, make Begin Extraction Available
-
-// Gets the URLS the user has selected
 // These are passed to background.js
 
 function makeExtractList() {
-  // Generate array of URL's that have been selected
-  var checked_profiles = [];
-  var profile_links = $(".name_link");
-  var popup_checkboxes = $("#results_body input");
+  // Generate array of URL's that have been pushed to global
+  sendPageList(profiles_on_deck);
+  // TODO User feedback
 
-
-  for (var i = 0; i < profile_links.length; i++) {
-    var i_profile = profile_links.eq(i);
-    var i_checkbox = popup_checkboxes.eq(i);
-    if (i_checkbox.prop('checked') === true) {
-      // if checkbox is checked
-      // get the post_data_url so we can make a request
-      var i_url = i_profile.attr('data');
-      checked_profiles.push(i_url);
-    }
-    // hide the results
-    hide_element('#results');
-    // only send list when complete
-    if (i === profile_links.length - 1) {
-      sendPageList(checked_profiles);
+  // Clear the global
+  profiles_on_deck = [];
     }
   }
 }
