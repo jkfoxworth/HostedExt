@@ -162,7 +162,6 @@ function credToBackground(auth_string) {
 }
 
 function requestResults() {
-  hide_element('#results');
   chrome.tabs.query({
     active: true,
     currentWindow: true
