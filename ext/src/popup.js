@@ -108,6 +108,7 @@ function allow_extraction() {
 }
 
 function show_messages(messages) {
+  unhide_element('#messages');
   $('.message_item').remove();
   for (var i = 0; i < messages.length; i++) {
     var message_element = $("<div>", {
