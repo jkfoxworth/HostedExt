@@ -6,7 +6,7 @@ chrome.runtime.sendMessage({
     action: "get user state"
   },
   function(response) {
-    handleUserState(response)
+    handleUserState(response);
   });
 
 
@@ -52,8 +52,8 @@ function handleLoginResponse(response) {
 function checkMessages(callback) {
   chrome.storage.sync.get('hermes_messages', function(items) {
     callback(items.hermes_messages);
-  })
-};
+  });
+}
 
 /*
 
@@ -114,7 +114,7 @@ function show_messages(messages) {
       id: ("message_" + i.toString()),
       class: "message_item",
       text: messages[i]
-    })
+    });
     $('#messages').append(message_element);
   }
 }
@@ -183,8 +183,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 // Awaits message from background. Message notifies that new message arrived.
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
   if (request.action === "new_message") {
-    // TODO Handle this
-    checkMessages(console.log);
+    checkMessages(show_messages);
   }
 });
 
@@ -207,7 +206,7 @@ function styleResults(SearchResults) {
       "<td>" + i_result.employer + "</td>" +
       "</tr>";
 
-    $('#results_body').append(row_html)
+    $('#results_body').append(row_html);
   }
   // Add event listener for select all checkbox
   $('#select_all').on('click', masterCheckboxListen);
