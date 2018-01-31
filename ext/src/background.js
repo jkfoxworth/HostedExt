@@ -244,7 +244,13 @@ function save_new_message(new_message) {
 }
 
 function queue_message(new_message, old_messages) {
-  var queue = old_messages;
+  var queue;
+  if (old_messages) {
+    queue = old_messages;
+  } else {
+    write_message([new_message]);
+    return;
+  }
   queue.push(new_message);
   if (old_messages.length <= 10) {
     write_message(queue);
