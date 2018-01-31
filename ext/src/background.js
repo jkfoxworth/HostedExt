@@ -238,7 +238,7 @@ function save_new_message(new_message) {
     if (items) {
       queue_message(new_message, items.hermes_messages);
     } else {
-      return queue_message(new_message, []);
+      queue_message(new_message, []);
     }
   });
 }
