@@ -231,6 +231,31 @@ function store_token(token_value, sendResponse) {
   });
 }
 
+// Save messages to Storage
+function handle_new_message(new_message, callback) {
+  chrome.storage.sync.get('hermes_messages', function(items) {
+    if (items) {
+      callback(new_message, items.hermes_messages);
+    } else {
+      return callback(new_message, []);
+    }
+  })
+}
+
+function queue_message(new_message, old_messages) {
+  var queue = old_messages;
+  queue.push(new_message);
+  if (old_messages.length<=10) {
+    write_message(queue);
+  } else {
+    queue.shift(); // The oldest message is removed
+    write_message(queue);
+  }
+}
+function write_message(messages){
+  chrome.storage.sync.set({'hermes_messages': messages});
+}
+
 // Filtering AJAX response to send to server
 // Callback will be to send AJAX once parsed
 function filter_json(code, callback) {
