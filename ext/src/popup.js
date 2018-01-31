@@ -198,7 +198,7 @@ function styleResults(SearchResults) {
   updateCartCount(SearchResults.length.toString());
 
   for (var i = 0; i < SearchResults.length; i++) {
-    profiles_on_deck.push(SearchResult.profile_url);
+    profiles_on_deck.push(SearchResults.profile_url);
   }
 }
 // These are passed to background.js
