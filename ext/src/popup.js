@@ -114,10 +114,10 @@ function show_messages(messages) {
   for (var i = 0; i < messages.length; i++) {
     var message_element = $("<div>", {
       id: ("message_" + i.toString()),
-      class: "message_item",
+      class: "card card-block message_item",
       text: messages[i]
     });
-    $('#messages').append(message_element);
+    $('#messagesCollapse').append(message_element);
   }
 }
 
