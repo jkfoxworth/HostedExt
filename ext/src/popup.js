@@ -190,7 +190,8 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 // Receives SearchResult object from inject.js
 // Generates HTML on popup.html from objects
 function styleResults(SearchResults) {
-
+  // Unhide #results
+  unhide_element('#results');
   // The table is 'invisible' unhide it
   $('#results_table').prop('class', 'table');
   for (var i = 0; i < SearchResults.length; i++) {
