@@ -58,7 +58,7 @@ function handle_token_check(token, callback) {
     (function() {
       chrome.storage.sync.get('token', function(items) {
         validateToken(items.token, callback); // Token validation
-      })
+      });
     })();
   }
 }
@@ -144,7 +144,7 @@ function getAuth(auth_encoded, callback, sendResponse) {
 function show_action_page(callback) {
   callback({
     action: 'show actions'
-  })
+  });
 }
 
 function show_login(callback) {
@@ -192,7 +192,7 @@ function retrieve_token(json_data) {
   } else {
     chrome.storage.sync.get('token', function(items) {
       postData(json_data, items.token);
-    })
+    });
   }
 }
 
@@ -202,7 +202,7 @@ function check_token(callback, responsecallback) {
   chrome.storage.sync.get('token', function(items) {
     if (items) {
       try {
-        if (items.token.length != null) {
+        if (items.token.length !== null) {
           callback(items.token, responsecallback);
         } else {
           callback(false, responsecallback);
@@ -224,7 +224,7 @@ function store_token(token_value, sendResponse) {
   chrome.storage.sync.set({
     'token': token_value
   });
-  token = token_value
+  token = token_value;
   console.log("Setting new token");
   save_new_message('Login success');
   sendResponse({
@@ -240,7 +240,7 @@ function save_new_message(new_message) {
     } else {
       return queue_message(new_message, []);
     }
-  })
+  });
 }
 
 function queue_message(new_message, old_messages) {
@@ -262,7 +262,8 @@ function write_message(messages) {
             action: "new_message"
           },
           function(response) {});
-      });
+      }
+    });
   }
 
   // Filtering AJAX response to send to server
@@ -303,8 +304,6 @@ function write_message(messages) {
       console.log(user_checked_message);
       save_new_message(user_checked_message);
       sendResponse();
-    } else if (request.action === 'download') {
-      requestDownload();
     }
   });
 
@@ -393,7 +392,7 @@ function write_message(messages) {
         var urls_to_request = JSON.parse(this.responseText)['data'];
         if (urls_to_request.length > 0) {
           requestPages(0, urls_to_request);
-        };
+        }
         var server_says = "Server says extract " + urls_to_request.length;
         console.log(server_says);
         save_new_message(server_says);
@@ -436,22 +435,6 @@ function write_message(messages) {
       });
     }
   }
-
-  function requestDownload() {
-    var xhttp;
-    xhttp = new XMLHttpRequest();
-    xhttp.onreadystatechange = function() {
-      if (this.readyState === 4 && this.status === 200) {
-        console.log("Response from download request");
-        console.log(this.responseText);
-      }
-    };
-    xhttp.open("GET", cache_url, true);
-    xhttp.setRequestHeader("Content-type", "application/json");
-    xhttp.setRequestHeader('Api-Key', token);
-    xhttp.send();
-  }
-
 
   function postData(filtered_ajax, user_token) {
     var xhttp;
