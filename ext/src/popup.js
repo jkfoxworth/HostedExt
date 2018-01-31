@@ -117,7 +117,7 @@ function show_messages(messages) {
       class: "card card-block message_item",
       text: messages[i]
     });
-    $('#messagesCollapse').append(message_element);
+    $('#collapseMessages').append(message_element);
   }
 }
 
