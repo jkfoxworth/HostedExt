@@ -232,7 +232,7 @@ function store_token(token_value, sendResponse) {
 }
 
 // Save messages to Storage
-function handle_new_message(new_message, callback) {
+function save_new_message(new_message, callback) {
   chrome.storage.sync.get('hermes_messages', function(items) {
     if (items) {
       callback(new_message, items.hermes_messages);
