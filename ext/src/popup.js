@@ -53,7 +53,6 @@ function checkMessages(callback){
     callback(items.hermes_messages);
     }
 
-
 /*
 
 DOM Manipulation
@@ -158,6 +157,14 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     if (request.action === "new_results") {
         styleResults(request.results); // Response Data to HTML
         sendResponse();
+    }
+});
+
+// Awaits message from background. Message notifies that new message arrived.
+chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
+    if (request.action === "new_message") {
+      // TODO Handle this
+      checkMessages(console.log);
     }
 });
 
