@@ -297,23 +297,24 @@ function store_cart(cart, callback) {
 function append_to_cart(new_data) {
   // get 'hermes_cart' and once complete run anon function
   chrome.storage.sync.get('hermes_cart', function(items) {
-      var old_cart = items.hermes_cart;
-      // define function here to ensure appending complete before proceeding
-      function appendThenCall(new_data, old_cart, callback) {
-        try {
-          for (var i = 0; i < new_data.length; i++) {
-            old_cart.push(new_data[i]);
-            if (i === (new_data.length - 1)) {
-              callback(old_cart);
-            }
-          } catch (e) {
-            callback(new_data);
+    var old_cart = items.hermes_cart;
+    // define function here to ensure appending complete before proceeding
+    function appendThenCall(new_data, old_cart, callback) {
+      try {
+        for (var i = 0; i < new_data.length; i++) {
+          old_cart.push(new_data[i]);
+          if (i === (new_data.length - 1)) {
+            callback(old_cart);
           }
         }
+
+      } catch (e) {
+        callback(new_data);
       }
     }
+
     appendThenCall(new_data, old_cart, store_cart);
-  });
+  })
 }
 
 function pull_from_cart(callback) {
