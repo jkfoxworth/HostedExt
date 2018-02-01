@@ -271,30 +271,30 @@ function write_message(messages) {
     }
   });
 }
-}
 
 // Prune URLs cascade ends here
 function store_cart(cart, callback) {
-    if (cart) {
-  chrome.storage.sync.set({
-    'hermes_cart': cart,
-    function() {
-      callback;
-    }
-  })
-} else {
+  if (cart) {
+    chrome.storage.sync.set({
+      'hermes_cart': cart,
+      function() {
+        callback();
+      }
+    });
+  } else {
     extracting_active = false; // cart is empty no extracting
     chrome.storage.sync.set({
-        'hermes_cart': [],
-        function () {
-            callback;
-        }
-    })
+      'hermes_cart': [],
+      function() {
+        callback();
+      }
+    });
+  }
 }
 
 // write pruned urls to hermes_cart in storage
 function append_to_cart(new_data) {
-    // get 'hermes_cart' and once complete run anon function
+  // get 'hermes_cart' and once complete run anon function
   chrome.storage.get('hermes_cart', function(items) {
     var old_cart = items.hermes_cart;
 
@@ -307,19 +307,19 @@ function append_to_cart(new_data) {
         }
       }
     }
-    appendThenCall(new_data, old_cart, store_cart)
+    appendThenCall(new_data, old_cart, store_cart);
   });
 }
 
 function pull_from_cart(callback) {
-    chrome.storage.sync.get('hermes_cart', function(items) {
-        var cart = items.hermes_cart;
-        var pulled = cart.shift();
-        // pulled is passed to callback
-        callback(pulled);
-        // put cart back in modified state
-        store_cart(cart);
-    });
+  chrome.storage.sync.get('hermes_cart', function(items) {
+    var cart = items.hermes_cart;
+    var pulled = cart.shift();
+    // pulled is passed to callback
+    callback(pulled);
+    // put cart back in modified state
+    store_cart(cart);
+  });
 }
 // Event Listeners
 
@@ -346,12 +346,12 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     console.log(user_checked_message);
     save_new_message(user_checked_message);
     sendResponse();
-} else if(request.action === "start_extract"){
+  } else if (request.action === "start_extract") {
     extracting_active = true;
 
-} else if(request.action === "stop_extract"){
+  } else if (request.action === "stop_extract") {
     extracting_active = false;
-}
+  }
 });
 
 
@@ -426,8 +426,8 @@ Counter - Int : Defaults to 0. Corresponds to index position of Array
 Urls - Array : Array of Urls
  */
 
- // Popup.js is sending 25 or fewer profile_streaming
- // Before adding to our cart, ask server if any are duplicates
+// Popup.js is sending 25 or fewer profile_streaming
+// Before adding to our cart, ask server if any are duplicates
 
 function prunePages(request) {
   var xhttp;
@@ -437,8 +437,8 @@ function prunePages(request) {
       console.log(this.responseText);
       var urls_to_request = JSON.parse(this.responseText)['data'];
       if (urls_to_request.length > 0) {
-          // Response is from server with non-duplicate Urls
-          // Save them to cart
+        // Response is from server with non-duplicate Urls
+        // Save them to cart
         append_to_cart(urls_to_request);
       }
       var server_says = "Server says extract " + urls_to_request.length;
@@ -461,34 +461,34 @@ function prunePages(request) {
 }
 
 function paceExtract() {
-    if (extracting_active) {
-        var wait_time = getRandomInt(5, 10);
-        setTimeout(pull_from_cart(doExtract), wait_time);
-    }
+  if (extracting_active) {
+    var wait_time = getRandomInt(5, 10);
+    setTimeout(pull_from_cart(doExtract), wait_time);
+  }
 }
 
-function doExtract(target){
-    if (active_tab) {  // global
-      chrome.tabs.sendMessage(active_tab.id, {
+function doExtract(target) {
+  if (active_tab) { // global
+    chrome.tabs.sendMessage(active_tab.id, {
+      action: 'get_page',
+      target: target
+    }, function(response) {
+      startPattern(response.data); // Starts cascade, ends with postData
+    });
+  } else {
+    chrome.tabs.query({
+      active: true,
+      currentWindow: true
+    }, function(tabs) { // Query returns active tab
+      active_tab = tabs[0];
+      chrome.tabs.sendMessage(tabs[0].id, {
         action: 'get_page',
         target: target
       }, function(response) {
         startPattern(response.data); // Starts cascade, ends with postData
       });
-    } else {
-      chrome.tabs.query({
-        active: true,
-        currentWindow: true
-      }, function(tabs) { // Query returns active tab
-        active_tab = tabs[0];
-        chrome.tabs.sendMessage(tabs[0].id, {
-          action: 'get_page',
-          target: target
-        }, function(response) {
-          startPattern(response.data); // Starts cascade, ends with postData
-        });
-      });
-    }
+    });
+  }
 }
 
 function postData(filtered_ajax, user_token) {
