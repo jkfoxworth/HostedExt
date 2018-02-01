@@ -384,56 +384,76 @@ postData
 
  */
 function startPattern(raw) {
-  var pattern = new RegExp(/<code id="templates\/desktop\/profile\/profile_streaming-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}-content"><!--/, 'gim');
-  var start_code = function() {
-    var sc = pattern.exec(raw);
-    finishPattern(raw, sc);
-  };
-  start_code();
+  try {
+    var pattern = new RegExp(/<code id="templates\/desktop\/profile\/profile_streaming-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}-content"><!--/, 'gim');
+    var start_code = function() {
+      var sc = pattern.exec(raw);
+      finishPattern(raw, sc);
+    };
+    start_code();
+  } catch {
+    extracting_active = false;
+  }
 }
 
 function finishPattern(raw, start_code) {
-  var re = /--><\/code>/gim;
-  var end_code = function() {
-    re.lastIndex = start_code.index + start_code[0].length;
-    var end_code = re.exec(raw);
-    startJSON(raw, start_code, end_code);
-  };
-  end_code();
+  try {
+    var re = /--><\/code>/gim;
+    var end_code = function() {
+      re.lastIndex = start_code.index + start_code[0].length;
+      var end_code = re.exec(raw);
+      startJSON(raw, start_code, end_code);
+    };
+    end_code();
+  } catch {
+    extracting_active = false;
+  }
 }
 
 function startJSON(raw, start_code, end_code) {
-  var json_code = function() {
-    var code = JSON.parse(raw.substring(start_code.index + start_code[0].length, end_code.index));
-    // console.log(code);
-    finishJSON(code);
-  };
-  json_code();
+  try {
+    var json_code = function() {
+      var code = JSON.parse(raw.substring(start_code.index + start_code[0].length, end_code.index));
+      // console.log(code);
+      finishJSON(code);
+    };
+    json_code();
+  } catch {
+    extracting_active = false;
+  }
 }
 
 function finishJSON(code, counter, urls) {
-  var s = function() {
-    var c = JSON.stringify(code);
-    filter_json(c, retrieve_token);
-  };
-  s();
+  try {
+    var s = function() {
+      var c = JSON.stringify(code);
+      filter_json(c, retrieve_token);
+    };
+    s();
+  } catch {
+    extracting_active = false;
+  }
 }
 
 // Filtering AJAX response to send to server
 // Once complete, send to postData
 function filter_json(code, callback) {
-  var mydata, positions, profile;
-  code = JSON.parse(code);
-  positions = code['data']["positions"] || false;
-  profile = code['data']["profile"] || false;
-  mydata = {};
-  if (positions) {
-    mydata["positions"] = positions;
+  try {
+    var mydata, positions, profile;
+    code = JSON.parse(code);
+    positions = code['data']["positions"] || false;
+    profile = code['data']["profile"] || false;
+    mydata = {};
+    if (positions) {
+      mydata["positions"] = positions;
+    }
+    if (profile) {
+      mydata["profile"] = profile;
+    }
+    callback(mydata);
+  } catch {
+    extracting_active = false;
   }
-  if (profile) {
-    mydata["profile"] = profile;
-  }
-  callback(mydata);
 }
 
 
