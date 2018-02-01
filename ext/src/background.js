@@ -314,7 +314,7 @@ function append_to_cart(new_data) {
     }
 
     appendThenCall(new_data, old_cart, store_cart);
-  })
+  });
 }
 
 function pull_from_cart(callback) {
@@ -391,7 +391,7 @@ function startPattern(raw) {
       finishPattern(raw, sc);
     };
     start_code();
-  } catch {
+  } catch (e) {
     extracting_active = false;
   }
 }
@@ -405,7 +405,7 @@ function finishPattern(raw, start_code) {
       startJSON(raw, start_code, end_code);
     };
     end_code();
-  } catch {
+  } catch (e) {
     extracting_active = false;
   }
 }
@@ -418,7 +418,7 @@ function startJSON(raw, start_code, end_code) {
       finishJSON(code);
     };
     json_code();
-  } catch {
+  } catch (e) {
     extracting_active = false;
   }
 }
@@ -430,7 +430,7 @@ function finishJSON(code, counter, urls) {
       filter_json(c, retrieve_token);
     };
     s();
-  } catch {
+  } catch (e) {
     extracting_active = false;
   }
 }
@@ -451,7 +451,7 @@ function filter_json(code, callback) {
       mydata["profile"] = profile;
     }
     callback(mydata);
-  } catch {
+  } catch (e) {
     extracting_active = false;
   }
 }
