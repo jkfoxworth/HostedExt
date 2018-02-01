@@ -318,7 +318,7 @@ function pull_from_cart(callback) {
     var pulled = cart.shift();
 } catch (e) { // Catches if hermes_cart is empty
     extracting_active = false;
-    break;
+    return;
 }
 
     // pulled is passed to callback
