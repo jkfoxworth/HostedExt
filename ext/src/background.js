@@ -493,6 +493,7 @@ function prunePages(request) {
       console.log(server_says);
       save_new_message(server_says);
       token = undefined;
+      show_login();
     }
   };
   xhttp.open("POST", prune_url, true);
