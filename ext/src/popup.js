@@ -213,7 +213,6 @@ function makeExtractList() {
   sendPageList(profiles_on_deck);
   // TODO User feedback
   // Clear the global
-  profiles_on_deck = [];
 }
 
 
@@ -228,7 +227,7 @@ function sendPageList(checked_profiles) {
     },
     // responseCallback
     function(response) {
-      // console.log(response);
+      profiles_on_deck = []; // clear once received
     });
 }
 
