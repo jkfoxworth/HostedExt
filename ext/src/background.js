@@ -333,6 +333,7 @@ function pull_from_cart(callback) {
     callback(pulled);
     // put cart back in modified state
     store_cart(cart);
+    save_new_message("Items remaining in cart: " + cart.length);
   });
 }
 // Event Listeners

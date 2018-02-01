@@ -89,6 +89,11 @@ function show_action() {
   $('#pause_extract').on('click', signalStopExtract);
   $('#clear_extract').on('click', signalClearExtract);
   checkMessages(show_messages); // Fetch and display messages
+  $('#open_log_button').on('click', handleOpenLog);
+}
+
+function handleOpenLog(){
+    // TODO
 }
 
 function show_login_error() {
