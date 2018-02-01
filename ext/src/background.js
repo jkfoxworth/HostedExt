@@ -298,7 +298,9 @@ function append_to_cart(new_data) {
   // get 'hermes_cart' and once complete run anon function
   chrome.storage.sync.get('hermes_cart', function(items) {
     var old_cart = items.hermes_cart;
-
+    if (typeof old_cart != 'undefined') {
+        old_cart = [];
+    }
     // define function here to ensure appending complete before proceeding
     function appendThenCall(new_data, old_cart, callback) {
       for (var i = 0; i < new_data.length; i++) {
