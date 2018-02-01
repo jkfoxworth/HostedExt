@@ -484,8 +484,8 @@ function prunePages(request) {
         // Save them to cart
         append_to_cart(urls_to_request);
       }
-      var server_says = "Added " + user_request_len.toString() + "to cart. "
-       + urls_to_request.length.toString() + " present on server, added to active file.";
+      var server_says = "You added " + user_request_len.toString() + " to cart. "
+       + urls_to_request.length.toString() + " items will be extracted. Remainder are present on server, added to your active file.";
       console.log(server_says);
       save_new_message(server_says);
     } else if (this.status === 400 || this.status === 401 || this.status === 404) {
