@@ -331,187 +331,192 @@ Response Sent: None
  */
 
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
-  if (request.action === "checked_profiles") {
-    // if it's passing a list of profiles
-    // console.log("Received list of profiles");
+      if (request.action === "checked_profiles") {
+        // if it's passing a list of profiles
+        // console.log("Received list of profiles");
 
-    // Begins cascade of events
-    // Starts with asking server what profiles are duplicates
-    // Server responds with duplicates removed
-    // Current cart is retrieved from storage
-    // Current cart has new profiles appended
-    // New cart is then written to storage
-    prunePages(request.checked);
-    var user_checked_message = "Selected " + request.checked.length + " to extract";
-    console.log(user_checked_message);
-    save_new_message(user_checked_message);
-    sendResponse();
-  } else if (request.action === "start_extract") {
-    extracting_active = true;
-
-  } else if (request.action === "stop_extract") {
-    extracting_active = false;
-  }
-});
-
-
-/* Function Chain That Handles Parsing AJAX ResponseText
-
-
-startPattern
-finishPattern
-startJSON
-finishJSON
-filter_json
-postData
-
- */
-function startPattern(raw) {
-  var pattern = new RegExp(/<code id="templates\/desktop\/profile\/profile_streaming-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}-content"><!--/, 'gim');
-  var start_code = function() {
-    var sc = pattern.exec(raw);
-    finishPattern(raw, sc);
-  };
-  start_code();
-}
-
-function finishPattern(raw, start_code) {
-  var re = /--><\/code>/gim;
-  var end_code = function() {
-    re.lastIndex = start_code.index + start_code[0].length;
-    var end_code = re.exec(raw);
-    startJSON(raw, start_code, end_code);
-  };
-  end_code();
-}
-
-function startJSON(raw, start_code, end_code) {
-  var json_code = function() {
-    var code = JSON.parse(raw.substring(start_code.index + start_code[0].length, end_code.index));
-    // console.log(code);
-    finishJSON(code, counter, urls);
-  };
-  json_code();
-}
-
-function finishJSON(code, counter, urls) {
-  var s = function() {
-    var c = JSON.stringify(code);
-    filter_json(c, postData);
-  };
-  s();
-}
-
-// Filtering AJAX response to send to server
-// Once complete, send to postData
-function filter_json(code, callback) {
-  var mydata, positions, profile;
-  code = JSON.parse(code);
-  positions = code['data']["positions"] || false;
-  profile = code['data']["profile"] || false;
-  mydata = {};
-  if (positions) {
-    mydata["positions"] = positions;
-  }
-  if (profile) {
-    mydata["profile"] = profile;
-  }
-  callback(mydata);
-}
-
-
-
-/* Called from Event Listener.
-Counter - Int : Defaults to 0. Corresponds to index position of Array
-Urls - Array : Array of Urls
- */
-
-// Popup.js is sending 25 or fewer profile_streaming
-// Before adding to our cart, ask server if any are duplicates
-
-function prunePages(request) {
-  var xhttp;
-  xhttp = new XMLHttpRequest();
-  xhttp.onreadystatechange = function() {
-    if (this.readyState === 4 && this.status === 201) {
-      console.log(this.responseText);
-      var urls_to_request = JSON.parse(this.responseText)['data'];
-      if (urls_to_request.length > 0) {
-        // Response is from server with non-duplicate Urls
-        // Save them to cart
-        append_to_cart(urls_to_request);
-      }
-      var server_says = "Server says extract " + urls_to_request.length;
-      console.log(server_says);
-      save_new_message(server_says);
-    } else if (this.status === 400 || this.status === 401 || this.status === 404) {
-      var server_says = "Server rejected pruning request";
-      console.log(server_says);
-      save_new_message(server_says);
+        // Begins cascade of events
+        // Starts with asking server what profiles are duplicates
+        // Server responds with duplicates removed
+        // Current cart is retrieved from storage
+        // Current cart has new profiles appended
+        // New cart is then written to storage
+        prunePages(request.checked);
+        var user_checked_message = "Selected " + request.checked.length + " to extract";
+        console.log(user_checked_message);
+        save_new_message(user_checked_message);
+        sendResponse();
+      } else if (request.action === "extract_signal") {
+        if (request.content === 'start_extract') {
+          extracting_active = true;
+          paceExtract();
+        } else if (request.content === 'stop_extract') {
+          extracting_active = false;
+        } else if (request.content === 'clear_extract') {
+          store_cart(); // calling with params effectively clears cart
+        }
     }
-  };
-  xhttp.open("POST", prune_url, true);
-  xhttp.setRequestHeader("Content-type", "application/json");
-  xhttp.setRequestHeader('Api-Key', token);
-
-  var data = JSON.stringify({
-    'data': request
-  });
-  xhttp.send(data);
-}
-
-function paceExtract() {
-  if (extracting_active) {
-    var wait_time = getRandomInt(5, 10);
-    setTimeout(pull_from_cart(doExtract), wait_time);
-  }
-}
-
-function doExtract(target) {
-  if (active_tab) { // global
-    chrome.tabs.sendMessage(active_tab.id, {
-      action: 'get_page',
-      target: target
-    }, function(response) {
-      startPattern(response.data); // Starts cascade, ends with postData
-    });
-  } else {
-    chrome.tabs.query({
-      active: true,
-      currentWindow: true
-    }, function(tabs) { // Query returns active tab
-      active_tab = tabs[0];
-      chrome.tabs.sendMessage(tabs[0].id, {
-        action: 'get_page',
-        target: target
-      }, function(response) {
-        startPattern(response.data); // Starts cascade, ends with postData
       });
-    });
-  }
-}
 
-function postData(filtered_ajax, user_token) {
-  var xhttp;
-  xhttp = new XMLHttpRequest();
-  xhttp.onreadystatechange = function() {
-    if (this.readyState === 4 && this.status === 201) {
-      paceExtract();
+
+    /* Function Chain That Handles Parsing AJAX ResponseText
+
+
+    startPattern
+    finishPattern
+    startJSON
+    finishJSON
+    filter_json
+    retrieve_token
+    postData
+
+     */
+    function startPattern(raw) {
+      var pattern = new RegExp(/<code id="templates\/desktop\/profile\/profile_streaming-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}-content"><!--/, 'gim');
+      var start_code = function() {
+        var sc = pattern.exec(raw);
+        finishPattern(raw, sc);
+      };
+      start_code();
     }
-  };
-  xhttp.open("POST", post_data_url, true);
-  xhttp.setRequestHeader("Content-type", "application/json");
-  xhttp.setRequestHeader('Api-Key', user_token);
 
-  var data = JSON.stringify({
-    'data': filtered_ajax
-  });
-  xhttp.send(data);
-}
+    function finishPattern(raw, start_code) {
+      var re = /--><\/code>/gim;
+      var end_code = function() {
+        re.lastIndex = start_code.index + start_code[0].length;
+        var end_code = re.exec(raw);
+        startJSON(raw, start_code, end_code);
+      };
+      end_code();
+    }
 
-function getRandomInt(min, max) {
-  min = Math.ceil(min) * 1000;
-  max = Math.floor(max) * 1000;
-  var calc = Math.floor(Math.random() * (max - min)) + min;
-  return calc;
-}
+    function startJSON(raw, start_code, end_code) {
+      var json_code = function() {
+        var code = JSON.parse(raw.substring(start_code.index + start_code[0].length, end_code.index));
+        // console.log(code);
+        finishJSON(code);
+      };
+      json_code();
+    }
+
+    function finishJSON(code, counter, urls) {
+      var s = function() {
+        var c = JSON.stringify(code);
+        filter_json(c, retrieve_token);
+      };
+      s();
+    }
+
+    // Filtering AJAX response to send to server
+    // Once complete, send to postData
+    function filter_json(code, callback) {
+      var mydata, positions, profile;
+      code = JSON.parse(code);
+      positions = code['data']["positions"] || false;
+      profile = code['data']["profile"] || false;
+      mydata = {};
+      if (positions) {
+        mydata["positions"] = positions;
+      }
+      if (profile) {
+        mydata["profile"] = profile;
+      }
+      callback(mydata);
+    }
+
+
+
+    /* Called from Event Listener.
+    Counter - Int : Defaults to 0. Corresponds to index position of Array
+    Urls - Array : Array of Urls
+     */
+
+    // Popup.js is sending 25 or fewer profile_streaming
+    // Before adding to our cart, ask server if any are duplicates
+
+    function prunePages(request) {
+      var xhttp;
+      xhttp = new XMLHttpRequest();
+      xhttp.onreadystatechange = function() {
+        if (this.readyState === 4 && this.status === 201) {
+          console.log(this.responseText);
+          var urls_to_request = JSON.parse(this.responseText)['data'];
+          if (urls_to_request.length > 0) {
+            // Response is from server with non-duplicate Urls
+            // Save them to cart
+            append_to_cart(urls_to_request);
+          }
+          var server_says = "Server says extract " + urls_to_request.length;
+          console.log(server_says);
+          save_new_message(server_says);
+        } else if (this.status === 400 || this.status === 401 || this.status === 404) {
+          var server_says = "Server rejected pruning request";
+          console.log(server_says);
+          save_new_message(server_says);
+        }
+      };
+      xhttp.open("POST", prune_url, true);
+      xhttp.setRequestHeader("Content-type", "application/json");
+      xhttp.setRequestHeader('Api-Key', token);
+
+      var data = JSON.stringify({
+        'data': request
+      });
+      xhttp.send(data);
+    }
+
+    function paceExtract() {
+      if (extracting_active) {
+        var wait_time = getRandomInt(5, 10);
+        setTimeout(pull_from_cart(doExtract), wait_time);
+      }
+    }
+
+    function doExtract(target) {
+      if (active_tab) { // global
+        chrome.tabs.sendMessage(active_tab.id, {
+          action: 'get_page',
+          target: target
+        }, function(response) {
+          startPattern(response.data); // Starts cascade, ends with postData
+        });
+      } else {
+        chrome.tabs.query({
+          active: true,
+          currentWindow: true
+        }, function(tabs) { // Query returns active tab
+          active_tab = tabs[0];
+          chrome.tabs.sendMessage(tabs[0].id, {
+            action: 'get_page',
+            target: target
+          }, function(response) {
+            startPattern(response.data); // Starts cascade, ends with postData
+          });
+        });
+      }
+    }
+
+    function postData(filtered_ajax, user_token) {
+      var xhttp;
+      xhttp = new XMLHttpRequest();
+      xhttp.onreadystatechange = function() {
+        if (this.readyState === 4 && this.status === 201) {
+          paceExtract();
+        }
+      };
+      xhttp.open("POST", post_data_url, true);
+      xhttp.setRequestHeader("Content-type", "application/json");
+      xhttp.setRequestHeader('Api-Key', user_token);
+
+      var data = JSON.stringify({
+        'data': filtered_ajax
+      });
+      xhttp.send(data);
+    }
+
+    function getRandomInt(min, max) {
+      min = Math.ceil(min) * 1000;
+      max = Math.floor(max) * 1000;
+      var calc = Math.floor(Math.random() * (max - min)) + min;
+      return calc;
+    }

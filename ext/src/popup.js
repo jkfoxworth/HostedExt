@@ -85,6 +85,9 @@ function show_action() {
   $('#logout_button').on('click', doLogout);
   $('#select_button_dropdown').on('click', requestResults);
   unhide_element('#actions');
+  $('#start_extract').on('click', signalStartExtract);
+  $('#pause_extract').on('click', signalStopExtract);
+  $('#clear_extract').on('click', signalClearExtract);
   checkMessages(show_messages); // Fetch and display messages
 }
 
@@ -191,6 +194,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 function updateCartCount(count) {
   $('#add_to_cart_count').prop('textContent', count);
   unhide_element('#add_to_cart_count');
+  $('#add_to_cart').on('click', makeExtractList);
 }
 
 function styleResults(SearchResults) {
@@ -208,7 +212,6 @@ function makeExtractList() {
   // Generate array of URL's that have been pushed to global
   sendPageList(profiles_on_deck);
   // TODO User feedback
-
   // Clear the global
   profiles_on_deck = [];
 }
@@ -227,4 +230,27 @@ function sendPageList(checked_profiles) {
     function(response) {
       // console.log(response);
     });
+}
+
+function signalStartExtract() {
+    extractSignals('start_extract');
+}
+
+function signalStopExtract() {
+    extractSignals('stop_extract');
+}
+
+function signalClearExtract() {
+    extractSignals('clear_extract');
+}
+function extractSignals(say){
+    chrome.runtime.sendMessage(
+        {
+            action: "extract_signal",
+            content: say
+        },
+        function(response) {
+
+        }
+    );
 }
