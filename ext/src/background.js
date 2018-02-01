@@ -156,7 +156,6 @@ function show_login(callback) {
 
 function show_login_error(callback) {
   console.log('telling popup of error');
-  save_new_message('Error logging in');
   callback({
     action: 'login fail'
   });
@@ -227,7 +226,6 @@ function store_token(token_value, sendResponse) {
   });
   token = token_value;
   console.log("Setting new token");
-  save_new_message('Login success');
   sendResponse({
     'action': 'login success'
   });
@@ -280,6 +278,9 @@ function store_cart(cart, callback) {
       'hermes_cart': cart,
       function() {
         callback();
+        if (cart.length%10===0) {
+            save_new_message(cart.length.toString() + " items remaining in cart");
+        }
       }
     });
   } else {
@@ -324,6 +325,7 @@ function pull_from_cart(callback) {
       var pulled = cart.shift();
     } catch (e) { // Catches if hermes_cart is empty
       extracting_active = false;
+      save_new_message("Cart empty");
       return;
     }
 
@@ -356,16 +358,18 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     prunePages(request.checked);
     var user_checked_message = "Selected " + request.checked.length + " to extract";
     console.log(user_checked_message);
-    save_new_message(user_checked_message);
     sendResponse();
   } else if (request.action === "extract_signal") {
     if (request.content === 'start_extract') {
       extracting_active = true;
+      save_new_message("Starting Extract");
       paceExtract();
     } else if (request.content === 'stop_extract') {
       extracting_active = false;
+      save_new_message("Extract Paused");
     } else if (request.content === 'clear_extract') {
       store_cart(); // calling with params effectively clears cart
+      save_new_message("Cart emptied");
     }
   }
 });
@@ -468,6 +472,7 @@ Urls - Array : Array of Urls
 
 function prunePages(request) {
   var xhttp;
+  var user_request_len = request.length;
   xhttp = new XMLHttpRequest();
   xhttp.onreadystatechange = function() {
     if (this.readyState === 4 && this.status === 201) {
@@ -478,7 +483,8 @@ function prunePages(request) {
         // Save them to cart
         append_to_cart(urls_to_request);
       }
-      var server_says = "Server says extract " + urls_to_request.length;
+      var server_says = "Added " + user_request_len.toString() + "to cart. "
+       + urls_to_request.length.toString() + " present on server, added to active file.";
       console.log(server_says);
       save_new_message(server_says);
     } else if (this.status === 400 || this.status === 401 || this.status === 404) {
