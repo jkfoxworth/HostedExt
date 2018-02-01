@@ -1,8 +1,8 @@
 {
 "update_url": "https://clients2.google.com/service/update2/crx",
 
-  "name": "Hermes - Alpha_1",
-  "version": "0.1.3",
+  "name": "Hermes - Beta Version",
+  "version": "0.1.0",
   "manifest_version": 2,
   "description": "Hermes",
   "homepage_url": "http://estasney1.pythonanywhere.com",
