@@ -314,7 +314,13 @@ function append_to_cart(new_data) {
 function pull_from_cart(callback) {
   chrome.storage.sync.get('hermes_cart', function(items) {
     var cart = items.hermes_cart;
+    try {
     var pulled = cart.shift();
+} catch (e) { // Catches if hermes_cart is empty
+    extracting_active = false;
+    break;
+}
+
     // pulled is passed to callback
     callback(pulled);
     // put cart back in modified state
