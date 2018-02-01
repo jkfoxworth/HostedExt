@@ -295,7 +295,7 @@ function store_cart(cart, callback) {
 // write pruned urls to hermes_cart in storage
 function append_to_cart(new_data) {
   // get 'hermes_cart' and once complete run anon function
-  chrome.storage.get('hermes_cart', function(items) {
+  chrome.storage.sync.get('hermes_cart', function(items) {
     var old_cart = items.hermes_cart;
 
     // define function here to ensure appending complete before proceeding
