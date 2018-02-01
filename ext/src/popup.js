@@ -205,6 +205,8 @@ function updateCartCount(count) {
 function styleResults(SearchResults) {
   // Show number in badge
   updateCartCount(SearchResults.length.toString());
+  // Clear profiles on deck
+  profiles_on_deck = [];
 
   for (var i = 0; i < SearchResults.length; i++) {
     profiles_on_deck.push(SearchResults[i].profile_url);
