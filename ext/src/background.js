@@ -469,7 +469,9 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
       if (extracting_active) {
           function smartWait() {
               var wait_time = getRandomInt(5, 10);
-              setTimeout(pull_from_cart(doExtract), wait_time);
+              setTimeout( function() {
+                  pull_from_cart(doExtract);
+              }, wait_time);
           }
           smartWait();
       }
