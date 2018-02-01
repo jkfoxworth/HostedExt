@@ -275,12 +275,21 @@ function write_message(messages) {
 
 // Prune URLs cascade ends here
 function store_cart(cart, callback) {
+    if (cart) {
   chrome.storage.sync.set({
     'hermes_cart': cart,
     function() {
       callback;
     }
   })
+} else {
+    extracting_active = false; // cart is empty no extracting
+    chrome.storage.sync.set({
+        'hermes_cart': [],
+        function () {
+            callback;
+        }
+    })
 }
 
 // write pruned urls to hermes_cart in storage
@@ -308,7 +317,7 @@ function pull_from_cart(callback) {
         var pulled = cart.shift();
         // pulled is passed to callback
         callback(pulled);
-        // cart should now be stored
+        // put cart back in modified state
         store_cart(cart);
     });
 }
@@ -353,7 +362,8 @@ startPattern
 finishPattern
 startJSON
 finishJSON
-dataToPopup
+filter_json
+postData
 
  */
 function startPattern(raw) {
@@ -393,7 +403,7 @@ function finishJSON(code, counter, urls) {
 }
 
 // Filtering AJAX response to send to server
-// Callback will be to send AJAX once parsed
+// Once complete, send to postData
 function filter_json(code, callback) {
   var mydata, positions, profile;
   code = JSON.parse(code);
@@ -450,25 +460,20 @@ function prunePages(request) {
   xhttp.send(data);
 }
 
-function startExtract(){
-
-}
-
-function stopExtract(){
-
-}
-
-function paceExtract(){
-    pull_from_cart(doExtract);
+function paceExtract() {
+    if (extracting_active) {
+        var wait_time = getRandomInt(5, 10);
+        setTimeout(pull_from_cart(doExtract), wait_time);
+    }
 }
 
 function doExtract(target){
-    if (active_tab) {
+    if (active_tab) {  // global
       chrome.tabs.sendMessage(active_tab.id, {
         action: 'get_page',
         target: target
       }, function(response) {
-        startPattern(response.data); // Callback called when response is received
+        startPattern(response.data); // Starts cascade, ends with postData
       });
     } else {
       chrome.tabs.query({
@@ -480,34 +485,10 @@ function doExtract(target){
           action: 'get_page',
           target: target
         }, function(response) {
-          startPattern(response.data); // Callback called when response is received
+          startPattern(response.data); // Starts cascade, ends with postData
         });
       });
     }
-}
-
-function requestPages(counter, urls) {
-  if (active_tab) {
-    chrome.tabs.sendMessage(active_tab.id, {
-      action: 'get_page',
-      target: urls[counter]
-    }, function(response) {
-      startPattern(response.data, counter, urls); // Callback called when response is received
-    });
-  } else {
-    chrome.tabs.query({
-      active: true,
-      currentWindow: true
-    }, function(tabs) { // Query returns active tab
-      active_tab = tabs[0];
-      chrome.tabs.sendMessage(tabs[0].id, {
-        action: 'get_page',
-        target: urls[counter]
-      }, function(response) {
-        startPattern(response.data, counter, urls); // Callback called when response is received
-      });
-    });
-  }
 }
 
 function postData(filtered_ajax, user_token) {
@@ -515,7 +496,7 @@ function postData(filtered_ajax, user_token) {
   xhttp = new XMLHttpRequest();
   xhttp.onreadystatechange = function() {
     if (this.readyState === 4 && this.status === 201) {
-      // TODO Update user progress
+      paceExtract();
     }
   };
   xhttp.open("POST", post_data_url, true);
