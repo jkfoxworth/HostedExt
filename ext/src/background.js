@@ -356,10 +356,10 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     // Current cart is retrieved from storage
     // Current cart has new profiles appended
     // New cart is then written to storage
-    prunePages(request.checked);
+    prunePages(request.checked, sendResponse);
     var user_checked_message = "Selected " + request.checked.length + " to extract";
     console.log(user_checked_message);
-    sendResponse();
+    return true;
   } else if (request.action === "extract_signal") {
     if (request.content === 'start_extract') {
       extracting_active = true;
@@ -471,7 +471,7 @@ Urls - Array : Array of Urls
 // Popup.js is sending 25 or fewer profile_streaming
 // Before adding to our cart, ask server if any are duplicates
 
-function prunePages(request) {
+function prunePages(request, callback) {
   var xhttp;
   var user_request_len = request.length;
   xhttp = new XMLHttpRequest();
@@ -488,12 +488,13 @@ function prunePages(request) {
        + urls_to_request.length.toString() + " items will be extracted. Remainder are present on server, added to your active file.";
       console.log(server_says);
       save_new_message(server_says);
+      callback;
     } else if (this.status === 400 || this.status === 401 || this.status === 404) {
       var server_says = "Server rejected pruning request";
       console.log(server_says);
       save_new_message(server_says);
       token = undefined;
-      show_login();
+      show_login(sendResponse);
     }
   };
   xhttp.open("POST", prune_url, true);
