@@ -11,6 +11,7 @@ var active_tab;
 var extracting_active = false;
 var token;
 
+devMode();
 // Uncomment as needed for local/live
 // run devMode() in background.js console to set all global urls to local
 
