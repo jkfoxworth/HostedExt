@@ -1,22 +1,23 @@
 <!DOCTYPE html>
 
 <html lang="en">
+
 <head>
 	<meta charset="utf-8">
 	<meta content="width=device-width, initial-scale=1.0" name="viewport">
 	<meta content="Hermes" name="description">
 	<link href="js/bootstrap/css/bootstrap.css" rel="stylesheet" type="text/css">
 	<style type="text/css">
-	      #mainPopup {
-	        padding: 10px;
-	        height: 800px;
-	        width: 400px;
-	        font-family: Helvetica, Ubuntu, Arial, sans-serif;
-	      }
+		#mainPopup {
+			padding: 10px;
+			height: 800px;
+			width: 400px;
+			font-family: Helvetica, Ubuntu, Arial, sans-serif;
+		}
 
-	      .hidden {
-	        display: none;
-	      }
+		.hidden {
+			display: none;
+		}
 	</style>
 
 	<title>Hermes</title>
@@ -61,7 +62,7 @@
 				<div class='btn-group mr-2' role='group'>
 
 					<div class='btn-group' role='group'>
-            <button class='btn btn-primary dropdown-toggle' id='select_button_dropdown' type='button' data-toggle='dropdown' aria-haspopup="true" aria-expanded="false">Select</button>
+						<button class='btn btn-primary dropdown-toggle' id='select_button_dropdown' type='button' data-toggle='dropdown' aria-haspopup="true" aria-expanded="false">Select</button>
 
 						<div aria-labelledby='select_button_dropdown' class='dropdown-menu'>
 							<button class='dropdown-item btn btn-primary' id='add_to_cart'>Add To Cart
@@ -69,42 +70,45 @@
 							</button>
 						</div>
 
-          <div class='btn-group' role='group'>
-						<button class='btn btn-primary dropdown-toggle' id='extract_button_dropdown' type='button' data-toggle='dropdown' aria-haspopup="true" aria-expanded="false">Extract</button>
-
-						<div aria-labelledby='extract_button_dropdown' class='dropdown-menu'>
-							<button class='dropdown-item btn btn-primary' id='start_extract'>Start</button>
-              <button class='dropdown-item btn btn-primary' id='pause_extract'>Pause</button>
-              <button class='dropdown-item btn btn-primary' id='clear_extract'>Clear</button>
-						</div>
-
-
 						<div class='btn-group' role='group'>
-							<button class='btn btn-primary dropdown-toggle' id='options_button_dropdown' type='button' data-toggle='dropdown' aria-haspopup="true" aria-expanded="false">Options</button>
+							<button class='btn btn-primary dropdown-toggle' id='extract_button_dropdown' type='button' data-toggle='dropdown' aria-haspopup="true" aria-expanded="false">Extract</button>
 
-							<div aria-labelledby='options_button_dropdown' class='dropdown-menu'>
-								<button class='dropdown-item btn btn-primary' id='logout_button'>Logout</button>
-                <button class='dropdown-item btn btn-primary' id='check_balance_button'>Check Balance</button>
-                <a aria-controls="collapseMessages" aria-expanded="false" class='dropdown-item' data-target="#collapseMessages" data-toggle="collapse">Open Log</a>
+							<div aria-labelledby='extract_button_dropdown' class='dropdown-menu'>
+								<button class='dropdown-item btn btn-primary' id='start_extract'>Start</button>
+								<button class='dropdown-item btn btn-primary' id='pause_extract'>Pause</button>
+								<button class='dropdown-item btn btn-primary' id='clear_extract'>Clear</button>
+							</div>
+
+
+							<div class='btn-group' role='group'>
+								<button class='btn btn-primary dropdown-toggle' id='options_button_dropdown' type='button' data-toggle='dropdown' aria-haspopup="true" aria-expanded="false">Options</button>
+
+								<div aria-labelledby='options_button_dropdown' class='dropdown-menu'>
+									<button class='dropdown-item btn btn-primary' id='logout_button'>Logout</button>
+									<button class='dropdown-item btn btn-primary' id='check_balance_button'>Check Balance</button>
+									<a aria-controls="collapseMessages" aria-expanded="false" class='dropdown-item' data-target="#collapseMessages" data-toggle="collapse">Open Log</a>
+								</div>
 							</div>
 						</div>
 					</div>
 				</div>
-
-				<div class="container-fluid hidden" id="messages">
-					<div class="collapse" id="collapseMessages">
-					</div>
-				</div>
 			</div>
-			<script src="js/jquery/jquery.js">
-			</script>
-			<script src="js/popper.min.js">
-			</script>
-			<script src="js/bootstrap/js/bootstrap.js">
-			</script>
-			<script src='popup.js'>
-			</script>
 		</div>
+
+		<div class="container-fluid hidden" id="messages">
+			<div class="collapse" id="collapseMessages">
+			</div>
+		</div>
+		<script src="js/jquery/jquery.js">
+		</script>
+		<script src="js/popper.min.js">
+		</script>
+		<script src="js/bootstrap/js/bootstrap.js">
+		</script>
+		<script src='popup.js'>
+		</script>
+	</div>
 	</div>
 </body>
+
 </html>
