@@ -494,7 +494,7 @@ function prunePages(request, callback) {
       console.log(server_says);
       save_new_message(server_says);
       token = undefined;
-      show_login(sendResponse);
+      show_login(callback);
     }
   };
   xhttp.open("POST", prune_url, true);
