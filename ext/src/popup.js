@@ -80,9 +80,9 @@ function unhide_element(selector) {
 
 function hide_element(selector) {
   var current_class = $(selector).prop('class');
-  if (current_class.indexOf("hidden") !== -1) {
-  var new_class = current_class + " hidden";
-  $(selector).prop('class', new_class);
+  if (current_class.indexOf("hidden") === -1) {
+    var new_class = current_class + " hidden";
+    $(selector).prop('class', new_class);
   }
 }
 
