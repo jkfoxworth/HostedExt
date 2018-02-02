@@ -119,7 +119,7 @@ function validateToken(token, callback) {
       token = token;
     },
     error: function(data) {
-      show_login(); // Catchall for errors, show login
+      show_login(callback); // Catchall for errors, show login
     }
   });
 }
@@ -127,7 +127,7 @@ function validateToken(token, callback) {
 
 function handle_token_check(token, callback) {
   if (token === false) {
-    show_login(); // No user token found, popup.js show login page
+    show_login(callback); // No user token found, popup.js show login page
   } else { // A token is found in storage. Is it valid?
     (function() {
       chrome.storage.sync.get('token', function(items) {
@@ -171,7 +171,7 @@ function getAuth(auth_encoded, callback, sendResponse) {
     success: function(data) {
       var json_data = JSON.stringify(data);
       token = JSON.parse(json_data).token; // Store the token in global var, token
-      callback(json_data, sendResponse); // Store the token to chrome storage on receipt
+      callback(json_data, sendResponse);
     },
     error: function(data) {
       show_login_error(sendResponse);
@@ -291,7 +291,7 @@ function store_token(token_value, sendResponse) {
   token = token_value;
   console.log("Setting new token");
   sendResponse({
-    'action': 'login success'
+    action: 'login success'
   });
   return true;
 }

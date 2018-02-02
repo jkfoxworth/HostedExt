@@ -74,14 +74,16 @@ DOM Manipulation
  */
 function unhide_element(selector) {
   var current_class = $(selector).prop('class');
-  var new_class = current_class.replace('hidden', '').trim();
+  var new_class = current_class.replace(/hidden/g, '').trim();
   $(selector).prop('class', new_class);
 }
 
 function hide_element(selector) {
   var current_class = $(selector).prop('class');
+  if (current_class.indexOf("hidden") !== -1) {
   var new_class = current_class + " hidden";
   $(selector).prop('class', new_class);
+  }
 }
 
 function show_login() {
