@@ -10,11 +10,33 @@ GLOBALS
 var active_tab;
 var extracting_active = false;
 var token;
+var pop_port;
 
 // Port to message Popup
-var pop_port = chrome.runtime.connect({
+pop_port = chrome.runtime.connect({
   name: 'background > popup'
 });
+pop_port.onDisconnect.addListener(function(msg) {
+  pop_port = chrome.runtime.connect({
+    name: 'background > popup'
+  });
+});
+
+function make_send_pop_port(message){
+
+  sub_pop_port = chrome.runtime.connect({
+    name: 'background > popup'
+  });
+  sub_pop_port.onDisconnect.addListener(function(msg) {
+    sub_pop_port = chrome.runtime.connect({
+      name: 'background > popup'
+    });
+  });
+  pop_port = sub_pop_port;
+  pop_port.postMessage(message);
+}
+
+
 
 var pop_in_port = null;
 
@@ -22,6 +44,9 @@ var pop_in_port = null;
 chrome.runtime.onConnect.addListener(function(port) {
   if (port.name === 'popup > background') {
     pop_in_port = port;
+    pop_in_port.onDisconnect.addListener(function(msg) {
+      pop_in_port = null;
+    });
     pop_in_port.onMessage.addListener(function(msg) {
       switch (msg.action) {
         case 'checked_profiles':
@@ -31,7 +56,7 @@ chrome.runtime.onConnect.addListener(function(port) {
           // Current cart is retrieved from storage
           // Current cart has new profiles appended
           // New cart is then written to storage
-          prunePages(msg.checked);
+          retrieve_token(prunePages, msg.checked);
           var user_checked_message = "Selected " + msg.checked.length + " to extract";
           console.log(user_checked_message);
           break;
@@ -205,6 +230,9 @@ function show_login(callback) {
         action: 'show login'
       });
     } catch (e) {
+      make_send_pop_port({
+        action: 'show login'
+      });
       console.log(e);
     }
   }
@@ -250,12 +278,13 @@ Storage Functions
 ================
 
  */
-function retrieve_token(json_data) {
+function retrieve_token(callback, json_data) {
   if (token) {
-    postData(json_data, token);
+    callback(json_data, token);
   } else {
     chrome.storage.sync.get('token', function(items) {
-      postData(json_data, items.token);
+      token = items.token;
+      callback(json_data, items.token);
     });
   }
 }
@@ -326,9 +355,15 @@ function queue_message(new_message, old_messages) {
 
 function write_message(messages) {
   function announce_message() {
+    try {
     pop_port.postMessage({
       action: 'new_message'
     });
+  } catch (e) {
+    make_send_pop_port({
+      action: 'new_message'
+    });
+  }
   }
   chrome.storage.sync.set({
       'hermes_messages': messages
@@ -340,6 +375,8 @@ function write_message(messages) {
 
 // Prune URLs cascade ends here
 function store_cart(cart) {
+  console.log("Storing cart " + cart);
+
   if (cart) {
     chrome.storage.sync.set({
       'hermes_cart': cart
@@ -395,10 +432,17 @@ function pull_from_cart(callback) {
     // put cart back in modified state
     store_cart(cart);
     // TODO Announce - 1
+    try{
     pop_port.postMessage({
       action: 'cart count',
       count: new_cart_count
     });
+  } catch (e) {
+    make_send_pop_port({
+      action: 'cart count',
+      count: new_cart_count
+    });
+  }
     console.log("Items remaining in cart: " + new_cart_count);
   });
 }
@@ -492,7 +536,7 @@ function filter_json(code, callback) {
     if (profile) {
       mydata.profile = profile;
     }
-    callback(mydata);
+    callback(mydata, postData);
   } catch (e) {
     extracting_active = false;
   }
@@ -508,7 +552,7 @@ Urls - Array : Array of Urls
 // Popup.js is sending 25 or fewer profile_streaming
 // Before adding to our cart, ask server if any are duplicates
 
-function prunePages(request) {
+function prunePages(request, user_token) {
   var server_says;
   var xhttp;
   var user_request_len = request.length;
@@ -526,16 +570,26 @@ function prunePages(request) {
       } else if (urls_to_request.length === 0) {
         server_says = "You added " + user_request_len.toString() + " to cart. All are present on server and are now in your active file.";
       } else if (urls_to_request.length > 0 && urls_to_request.length === user_request_len) {
+        append_to_cart(urls_to_request);
         server_says = "You added " + user_request_len.toString() + " to cart. None present on server.";
       } else {
+        append_to_cart(urls_to_request);
         server_says = "You added " + user_request_len.toString() + " to cart.";
       }
       console.log(server_says);
       save_new_message(server_says);
-      pop_port.postMessage({
-        action: 'prune_results',
-        count: urls_to_request.len
-      });
+      try {
+        pop_port.postMessage({
+          action: 'prune_results',
+          count: urls_to_request.length
+        });
+      } catch (e) {
+        make_send_pop_port({
+          action: 'prune_results',
+          count: urls_to_request.length
+        });
+      }
+
 
     } else if (this.status === 400 || this.status === 401 || this.status === 404) {
       server_says = "Server rejected pruning request";
