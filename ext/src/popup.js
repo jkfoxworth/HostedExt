@@ -58,6 +58,7 @@ function continueAuthListening() {
         }
       });
   };
+  listening_for_auth();
   }
 }
 
@@ -66,6 +67,7 @@ chrome.runtime.sendMessage({
     action: "get user state"
   },
   function(response) {
+      console.log(response);
     handleUserState(response);
   });
 
@@ -102,10 +104,11 @@ function show_login() {
 }
 
 function show_action() {
-  checkCartSize(update_cart_qty);
+    unhide_element('#actions');
   $('#logout_button').on('click', doLogout);
   $('#select_button_dropdown').on('click', requestResults);
-  unhide_element('#actions');
+
+  checkCartSize(update_cart_qty);
   $('#start_extract').on('click', signalStartExtract);
   $('#pause_extract').on('click', signalStopExtract);
   $('#clear_extract').on('click', signalClearExtract);
@@ -254,6 +257,7 @@ function listenForResults() {
         }
       });
   };
+  listening_for_results();
   }
 }
 
@@ -279,12 +283,13 @@ function listenForPrune() {
       chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
         if (request.action === 'prune_results') {
           profiles_on_deck = [];
-          var len_of_prune = request.count || 0;
+          var len_of_prune = request.count;
           update_cart_qty(len_of_prune);
           sendResponse();
         }
       });
   };
+  listening_for_prune();
   }
 }
 

@@ -239,6 +239,7 @@ function store_token(token_value, sendResponse) {
   sendResponse({
     'action': 'login success'
   });
+  return true;
 }
 
 // Save messages to Storage
