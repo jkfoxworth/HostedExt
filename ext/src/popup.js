@@ -1,84 +1,71 @@
 // popup.js
 
 var profiles_on_deck = [];
-var listening_for_results = null;
-var listening_for_prune = null;
-var listening_for_auth = null;
 
 /*
 
-User Auth Functions
-====================
+User Authentication State
+=========================
 
-On load popup, immediately ask for user State
-
-    - Authenticated?
-        - Show Action buttons
-    - Else?
-        - Show Login form
-            - Handle login submit
 */
-
-function handleUserState(response) {
-  if (response.action === "show login") {
-    show_login();
-    continueAuthListening();
-  } else if (response.action === 'show actions') {
-    show_action();
-    continueAuthListening();
-  } else if (response.action === 'show login error') {
-    show_login_error();
-  }
-
-}
-
-function handleLoginResponse(response) {
-  if (response) {
-    if (response.action === 'login success') {
-      new_login();
-      continueAuthListening();
-    } else if (response.action === 'login fail') {
-      show_login_error();
-    }
-  } else {
-    show_login_error();
-  }
-}
-
-function continueAuthListening() {
-  if (listening_for_auth) {
-    return;
-  } else {
-    listening_for_auth = function() {
-      chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
-        if (request.action === 'show auth error') {
-          doLogout();
-          listening_for_auth = false;
-          sendResponse();
-        }
-      });
-  };
-  listening_for_auth();
-  }
-}
-
 
 chrome.runtime.sendMessage({
     action: "get user state"
   },
   function(response) {
-      console.log(response);
     handleUserState(response);
   });
 
+function handleUserState(response) {
+  if (response.action === "show login") {
+    show_login();
+  } else if (response.action === 'show actions') {
+    show_action();
+  } else if (response.action === 'show login error') {
+    show_login_error();
+  }
+}
 
 
 /*
 
-View Functions
-==============
+Messaging
+========
+
 */
 
+// Our port to message background
+var port = chrome.runtime.connect({
+  name: 'popup > background'
+});
+
+// Listen for all messages
+chrome.runtime.onConnect.addListener(function(port) {
+  if (port.name === 'background > popup') { // A port was just opened to speak with popup
+    port.onMessage.addListener(function(msg) { // Port is relevant
+        switch (msg.action) { // action will determine reaction
+          case 'show auth error': // If server returns 400 sometime after login
+            doLogout();
+            break;
+          case 'prune_results':
+            profiles_on_deck = [];
+            var len_of_prune = msg.count;
+            update_cart_qty(len_of_prune);
+            break;
+
+        }
+      });
+    }
+    else if (port.name === 'inject > popup') {
+      port.onMessage.addListener(function(msg) {
+        switch (msg.action) {
+          case 'new_results':
+            styleResults(msg.results);
+            break;
+        }
+      });
+    }
+  });
 /*
 
 DOM Manipulation
@@ -104,11 +91,12 @@ function show_login() {
 }
 
 function show_action() {
-    unhide_element('#actions');
+  unhide_element('#actions');
   $('#logout_button').on('click', doLogout);
   $('#select_button_dropdown').on('click', requestResults);
+}
 
-  checkCartSize(update_cart_qty);
+function checkCartSize(update_cart_qty) {
   $('#start_extract').on('click', signalStartExtract);
   $('#pause_extract').on('click', signalStopExtract);
   $('#clear_extract').on('click', signalClearExtract);
@@ -132,207 +120,169 @@ function update_cart_qty(new_qty) {
   }, 800);
 }
 
-function handleOpenLog() {
-  // TODO setInterval updates
-}
+  function handleOpenLog() {
+    // TODO setInterval updates
+  }
 
-function show_login_error() {
-  unhide_element('#login_alert');
-}
+  function show_login_error() {
+    unhide_element('#login_alert');
+  }
 
-function new_login() {
-  hide_element('#login');
-  show_action();
-}
+  function new_login() {
+    hide_element('#login');
+    show_action();
+  }
 
-function new_logout() {
-  hide_element('#actions');
-  hide_element('#results');
-  show_login();
-}
+  function new_logout() {
+    hide_element('#actions');
+    show_login();
+  }
 
-function show_messages(messages) {
-  unhide_element('#messages');
-  $('.message_item').remove();
-  try {
-    for (var i = 0; i < messages.length; i++) {
-      var message_element = $("<div>", {
-        id: ("message_" + i.toString()),
-        class: "card card-block message_item",
-        text: messages[i]
-      });
-      $('#collapseMessages').append(message_element);
+  function show_messages(messages) {
+    unhide_element('#messages');
+    $('.message_item').remove();
+    try {
+      for (var i = 0; i < messages.length; i++) {
+        var message_element = $("<div>", {
+          id: ("message_" + i.toString()),
+          class: "card card-block message_item",
+          text: messages[i]
+        });
+        $('#collapseMessages').append(message_element);
+      }
+    } catch (e) {
+      console.log(e);
     }
-  } catch (e) {
-    console.log(e);
   }
-}
 
-function updateCartCount(count) {
-  $('#add_to_cart_count').prop('textContent', count);
-  unhide_element('#add_to_cart_count');
-  $('#add_to_cart').on('click', makeExtractList);
-}
-
-function styleResults(SearchResults) {
-  // Show number in badge
-  updateCartCount(SearchResults.length.toString());
-  // Clear profiles on deck
-  profiles_on_deck = [];
-  for (var i = 0; i < SearchResults.length; i++) {
-    profiles_on_deck.push(SearchResults[i].profile_url);
+  function updateItemsAvailable(count) {
+    $('#add_to_cart_count').prop('textContent', count);
+    unhide_element('#add_to_cart_count');
+    $('#add_to_cart').on('click', makeExtractList);
   }
-}
 
-/*
-storage
-*/
+  function styleResults(SearchResults) {
+    // Show number in badge
+    updateItemsAvailable(SearchResults.length.toString());
+    // Clear profiles on deck
+    profiles_on_deck = [];
+    for (var i = 0; i < SearchResults.length; i++) {
+      profiles_on_deck.push(SearchResults[i].profile_url);
+    }
+  }
 
-// Check sync storage for messages from background
-function checkMessages(callback) {
-  chrome.storage.sync.get('hermes_messages', function(items) {
-    callback(items.hermes_messages);
-  });
-}
+  /*
 
-function checkCartSize(callback) {
-  chrome.storage.sync.get('hermes_cart', function(items) {
-    var cart_size = items.hermes_cart.length || 0;
-    callback(cart_size);
-  });
-}
+  Storage
+  =======
 
+  */
 
-
-/*
-
-/*
-
-Messaging Functions
-===================
-
-doLogin - event listener for user pressing login button
-doLogout - event listener for user pressing logout button. Sets 'token' to null in chrome storage and changes popup to login
-
-
-credToBackground - sends the values to background.js for handling
-
-requestResults() - sends message intended for inject.js to get the results from page
- */
-
-function doLogin() {
-  var username = $('#user_id').val();
-  var password = $('#user_pass').val();
-  var auth_string = username + ":" + password;
-  credToBackground(auth_string);
-}
-
-function doLogout() {
-  chrome.storage.sync.set({
-    'token': null
-  });
-  new_logout();
-}
-
-function credToBackground(auth_string) {
-  chrome.runtime.sendMessage({
-      action: "user login submit",
-      data: auth_string
-    },
-    function(response) {
-      handleLoginResponse(response);
+  // Check sync storage for messages from background
+  function checkMessages(callback) {
+    chrome.storage.sync.get('hermes_messages', function(items) {
+      callback(items.hermes_messages);
     });
-}
-
-function listenForResults() {
-  if (listening_for_results) {
-      console.log(listening_for_results);
-    return;
-  } else {
-    listening_for_results = function() {
-      chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
-        if (request.action === 'new_results') {
-          styleResults(request.results);
-          sendResponse();
-        }
-      });
-  };
-  listening_for_results();
   }
-}
 
-function requestResults() {
-  chrome.tabs.query({
-    active: true,
-    currentWindow: true
-  }, function(tabs) {
-    chrome.tabs.sendMessage(
-      tabs[0].id, {
-        action: "fetch_results"
-      },
-      function(response) {});
-  });
-  listenForResults();
-}
-
-function listenForPrune() {
-  if (listening_for_prune) {
-    return;
-  } else {
-    listening_for_prune = function() {
-      chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
-        if (request.action === 'prune_results') {
-          profiles_on_deck = [];
-          var len_of_prune = request.count;
-          update_cart_qty(len_of_prune);
-          sendResponse();
-        }
-      });
-  };
-  listening_for_prune();
+  function checkCartSize(callback) {
+    chrome.storage.sync.get('hermes_cart', function(items) {
+      var cart_size = items.hermes_cart.length || 0;
+      callback(cart_size);
+    });
   }
-}
 
-// Function that passes checked URLs
-function sendPageList(checked_profiles) {
-  listenForPrune();
-  chrome.runtime.sendMessage({
-      action: "checked_profiles",
-      checked: checked_profiles
-    },
-    function(response) {});
-}
+  /*
 
-function makeExtractList() {
-  // Generate array of URL's that have been pushed to global
-  sendPageList(profiles_on_deck);
-}
+  Messaging Functions
+  ===================
 
-/*
+   */
 
-Messaging - Extraction
-
-*/
-
-function signalStartExtract() {
-  extractSignals('start_extract');
-}
-
-function signalStopExtract() {
-  extractSignals('stop_extract');
-}
-
-function signalClearExtract() {
-  extractSignals('clear_extract');
-}
-
-function extractSignals(say) {
-  chrome.runtime.sendMessage({
-      action: "extract_signal",
-      content: say
-    },
-    function(response) {
-
+  function handleLoginResponse(response) {
+    if (response) {
+      if (response.action === 'login success') {
+        new_login();
+      } else if (response.action === 'login fail') {
+        show_login_error();
+      }
+    } else {
+      show_login_error();
     }
-  );
-}
+  }
+
+  function credToBackground(auth_string) {
+    chrome.runtime.sendMessage({
+        action: "user login submit",
+        data: auth_string
+      },
+      function(response) {
+        handleLoginResponse(response);
+      });
+  }
+
+  function doLogin() {
+    var username = $('#user_id').val();
+    var password = $('#user_pass').val();
+    var auth_string = username + ":" + password;
+    credToBackground(auth_string);
+  }
+
+  function doLogout() {
+    chrome.storage.sync.set({
+      'token': null
+    });
+    new_logout();
+  }
+
+  function requestResults() {
+    chrome.tabs.query({
+      active: true,
+      currentWindow: true
+    }, function(tabs) {
+      chrome.tabs.sendMessage(
+        tabs[0].id, {
+          action: "fetch_results"
+        },
+        function(response) {});
+    });
+    listenForResults();
+  }
+
+  // Function that passes checked URLs
+  function sendPageList(checked_profiles) {
+    port.postMessage({
+      action: 'checked_profiles',
+      checked: checked_profiles
+    });
+  }
+
+  function makeExtractList() {
+    // Generate array of URL's that have been pushed to global
+    sendPageList(profiles_on_deck);
+  }
+
+  /*
+
+  Messaging - Extraction
+
+  */
+
+  function signalStartExtract() {
+    extractSignals('start_extract');
+  }
+
+  function signalStopExtract() {
+    extractSignals('stop_extract');
+  }
+
+  function signalClearExtract() {
+    extractSignals('clear_extract');
+  }
+
+  function extractSignals(say) {
+    port.postMessage({
+        action: "extract_signal",
+        content: say
+      });
+  }
