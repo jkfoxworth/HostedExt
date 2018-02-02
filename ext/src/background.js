@@ -11,7 +11,6 @@ var active_tab;
 var extracting_active = false;
 var token;
 
-
 // Uncomment as needed for local/live
 // run devMode() in background.js console to set all global urls to local
 
@@ -149,9 +148,15 @@ function show_action_page(callback) {
 }
 
 function show_login(callback) {
+try {
   callback({
     action: 'show login'
   });
+} catch (e){
+    chrome.runtime.sendMessage({
+        action: 'show auth error'},
+    function(response){});
+}
 }
 
 function show_login_error(callback) {
@@ -159,6 +164,11 @@ function show_login_error(callback) {
   callback({
     action: 'login fail'
   });
+}
+
+function send_cart_count(message){
+    chrome.runtime.sendMessage(message,
+    function (response) {});
 }
 
 
@@ -356,10 +366,9 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     // Current cart is retrieved from storage
     // Current cart has new profiles appended
     // New cart is then written to storage
-    prunePages(request.checked, sendResponse);
+    prunePages(request.checked);
     var user_checked_message = "Selected " + request.checked.length + " to extract";
     console.log(user_checked_message);
-    return true;
   } else if (request.action === "extract_signal") {
     if (request.content === 'start_extract') {
       extracting_active = true;
@@ -488,13 +497,13 @@ function prunePages(request, callback) {
        + urls_to_request.length.toString() + " items will be extracted. Remainder are present on server, added to your active file.";
       console.log(server_says);
       save_new_message(server_says);
-      callback;
+      send_cart_count({action: 'prune_results', count: urls_to_request.len});
     } else if (this.status === 400 || this.status === 401 || this.status === 404) {
       var server_says = "Server rejected pruning request";
       console.log(server_says);
       save_new_message(server_says);
       token = undefined;
-      show_login(callback);
+      show_login();
     }
   };
   xhttp.open("POST", prune_url, true);
