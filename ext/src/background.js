@@ -7,7 +7,7 @@ GLOBALS
 
 */
 // Global var to store the tab id where extract was called
-var active_tab;
+var active_tab = null;
 var extracting_active = false;
 var token;
 var pop_port;
@@ -65,7 +65,17 @@ chrome.runtime.onConnect.addListener(function(port) {
             case 'start_extract':
               extracting_active = true;
               save_new_message("Starting Extract");
-              paceExtract();
+              if (active_tab) { // paceExtract has timeout. get active tab now
+                paceExtract();
+              } else {
+                chrome.tabs.query({
+                  highlighted: true,
+
+                }, function(tabs) { // Query returns active tab
+                  active_tab = tabs[0];
+                  paceExtract();
+              });
+            }
               break;
             case 'stop_extract':
               extracting_active = false;
@@ -327,6 +337,7 @@ function store_token(token_value, sendResponse) {
 
 // Save messages to Storage
 function save_new_message(new_message) {
+  console.log(new_message);
   chrome.storage.sync.get('hermes_messages', function(items) {
     if (items) {
       queue_message(new_message, items.hermes_messages);
@@ -619,9 +630,9 @@ function paceExtract() {
     setTimeout(function() {
       pull_from_cart(doExtract);
     }, wait_time);
+    }
     if (extracting_active) {
       smartWait();
-    }
   }
 }
 
@@ -635,8 +646,8 @@ function doExtract(target) {
     });
   } else {
     chrome.tabs.query({
-      active: true,
-      currentWindow: true
+      highlighted: true,
+
     }, function(tabs) { // Query returns active tab
       active_tab = tabs[0];
       chrome.tabs.sendMessage(tabs[0].id, {
