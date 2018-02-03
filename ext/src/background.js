@@ -7,10 +7,91 @@ GLOBALS
 
 */
 // Global var to store the tab id where extract was called
-var active_tab;
+var active_tab = null;
 var extracting_active = false;
 var token;
+var pop_port;
 
+// Port to message Popup
+pop_port = chrome.runtime.connect({
+  name: 'background > popup'
+});
+pop_port.onDisconnect.addListener(function(msg) {
+  pop_port = chrome.runtime.connect({
+    name: 'background > popup'
+  });
+});
+
+function make_send_pop_port(message){
+
+  sub_pop_port = chrome.runtime.connect({
+    name: 'background > popup'
+  });
+  sub_pop_port.onDisconnect.addListener(function(msg) {
+    sub_pop_port = chrome.runtime.connect({
+      name: 'background > popup'
+    });
+  });
+  pop_port = sub_pop_port;
+  pop_port.postMessage(message);
+}
+
+
+
+var pop_in_port = null;
+
+// Listening
+chrome.runtime.onConnect.addListener(function(port) {
+  if (port.name === 'popup > background') {
+    pop_in_port = port;
+    pop_in_port.onDisconnect.addListener(function(msg) {
+      pop_in_port = null;
+    });
+    pop_in_port.onMessage.addListener(function(msg) {
+      switch (msg.action) {
+        case 'checked_profiles':
+          // Begins cascade of events
+          // Starts with asking server what profiles are duplicates
+          // Server responds with duplicates removed
+          // Current cart is retrieved from storage
+          // Current cart has new profiles appended
+          // New cart is then written to storage
+          retrieve_token(prunePages, msg.checked);
+          var user_checked_message = "Selected " + msg.checked.length + " to extract";
+          console.log(user_checked_message);
+          break;
+        case 'extract_signal':
+          switch (msg.content) {
+            case 'start_extract':
+              extracting_active = true;
+              save_new_message("Starting Extract");
+              if (active_tab) { // paceExtract has timeout. get active tab now
+                paceExtract();
+              } else {
+                chrome.tabs.query({
+                  highlighted: true,
+
+                }, function(tabs) { // Query returns active tab
+                  active_tab = tabs[0];
+                  paceExtract();
+              });
+            }
+              break;
+            case 'stop_extract':
+              extracting_active = false;
+              save_new_message("Extract Paused");
+              break;
+            case 'clear_extract':
+              store_cart(); // calling with params effectively clears cart
+              save_new_message("Cart emptied");
+              break;
+          }
+          break;
+
+      }
+    });
+  }
+});
 
 // Uncomment as needed for local/live
 // run devMode() in background.js console to set all global urls to local
@@ -50,6 +131,33 @@ LOGIN HANDLERS
 ==============
 
  */
+function validateToken(token, callback) {
+  $.ajax({
+    type: 'GET',
+    async: true,
+    timeout: 10000,
+    url: confirm_auth_url,
+    dataType: 'json',
+    statusCode: {
+      404: function() {
+        show_login(callback); // Token not accepted, popup show login
+      }
+    },
+    beforeSend: function(xhr) {
+      xhr.setRequestHeader('Accept', 'application/json, text/javascript, */*; q=0.01');
+      xhr.setRequestHeader('Accept-Language', 'en-US,en;q=0.8');
+      xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+      xhr.setRequestHeader('Api-Key', token);
+    },
+    success: function() {
+      show_action_page(callback); // Token accepted, show action buttons
+      token = token;
+    },
+    error: function(data) {
+      show_login(callback); // Catchall for errors, show login
+    }
+  });
+}
 
 
 function handle_token_check(token, callback) {
@@ -66,42 +174,7 @@ function handle_token_check(token, callback) {
 
 // confirms valid token with server
 
-function validateToken(token, callback) {
-  $.ajax({
-    type: 'GET',
-    async: true,
-    timeout: 10000,
-    url: confirm_auth_url,
-    dataType: 'json',
-    statusCode: {
-      404: function() {
-        show_login(callback); // Token not accepted, popup show login
-        // clear stored token
-        chrome.storage.sync.set({
-          'token': null
-        });
-        token = undefined;
-      }
-    },
-    beforeSend: function(xhr) {
-      xhr.setRequestHeader('Accept', 'application/json, text/javascript, */*; q=0.01');
-      xhr.setRequestHeader('Accept-Language', 'en-US,en;q=0.8');
-      xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-      xhr.setRequestHeader('Api-Key', token);
-    },
-    success: function() {
-      show_action_page(callback); // Token accepted, show action buttons
-      token = token;
-    },
-    error: function(data) {
-      show_login(callback); // Catchall for errors, show login
-      chrome.storage.sync.set({
-        'token': null
-      });
-      token = undefined;
-    }
-  });
-}
+
 
 //  Function that base64 encodes username:password to use in Authentication header
 function doEncoding(auth_string, sendResponse) {
@@ -132,8 +205,8 @@ function getAuth(auth_encoded, callback, sendResponse) {
     },
     success: function(data) {
       var json_data = JSON.stringify(data);
-      token = JSON.parse(json_data)['token']; // Store the token in global var, token
-      callback(json_data, sendResponse); // Store the token to chrome storage on receipt
+      token = JSON.parse(json_data).token; // Store the token in global var, token
+      callback(json_data, sendResponse);
     },
     error: function(data) {
       show_login_error(sendResponse);
@@ -149,17 +222,46 @@ function show_action_page(callback) {
 }
 
 function show_login(callback) {
-  callback({
-    action: 'show login'
-  });
+  token = undefined;
+  try {
+    chrome.storage.sync.set({
+      'token': null
+    });
+  } catch (e) {
+    console.log(e);
+  }
+  if (callback) {
+    callback({
+      action: 'show login'
+    });
+  } else {
+    try {
+      pop_port.postMessage({
+        action: 'show login'
+      });
+    } catch (e) {
+      make_send_pop_port({
+        action: 'show login'
+      });
+      console.log(e);
+    }
+  }
 }
 
 function show_login_error(callback) {
-  console.log('telling popup of error');
   callback({
     action: 'login fail'
   });
+  try {
+    chrome.storage.sync.set({
+      'token': null
+    });
+  } catch (e) {
+    console.log(e);
+  }
+  token = undefined;
 }
+
 
 
 /*
@@ -186,12 +288,13 @@ Storage Functions
 ================
 
  */
-function retrieve_token(json_data) {
+function retrieve_token(callback, json_data) {
   if (token) {
-    postData(json_data, token);
+    callback(json_data, token);
   } else {
     chrome.storage.sync.get('token', function(items) {
-      postData(json_data, items.token);
+      token = items.token;
+      callback(json_data, items.token);
     });
   }
 }
@@ -220,19 +323,21 @@ function check_token(callback, responsecallback) {
 
 // Set user state
 function store_token(token_value, sendResponse) {
-  token_value = JSON.parse(token_value)['token'];
+  token_value = JSON.parse(token_value).token;
   chrome.storage.sync.set({
     'token': token_value
   });
   token = token_value;
   console.log("Setting new token");
   sendResponse({
-    'action': 'login success'
+    action: 'login success'
   });
+  return true;
 }
 
 // Save messages to Storage
 function save_new_message(new_message) {
+  console.log(new_message);
   chrome.storage.sync.get('hermes_messages', function(items) {
     if (items) {
       queue_message(new_message, items.hermes_messages);
@@ -260,36 +365,37 @@ function queue_message(new_message, old_messages) {
 }
 
 function write_message(messages) {
+  function announce_message() {
+    try {
+    pop_port.postMessage({
+      action: 'new_message'
+    });
+  } catch (e) {
+    make_send_pop_port({
+      action: 'new_message'
+    });
+  }
+  }
   chrome.storage.sync.set({
-    'hermes_messages': messages,
-    function() { // announce that new message is written
-      chrome.runtime.sendMessage({
-          action: "new_message"
-        },
-        function(response) {});
-    }
-  });
+      'hermes_messages': messages
+    },
+    function() {
+      announce_message();
+    });
 }
 
 // Prune URLs cascade ends here
-function store_cart(cart, callback) {
+function store_cart(cart) {
+  console.log("Storing cart " + cart);
+
   if (cart) {
     chrome.storage.sync.set({
-      'hermes_cart': cart,
-      function() {
-        callback();
-        if (cart.length%10===0) {
-            save_new_message(cart.length.toString() + " items remaining in cart");
-        }
-      }
+      'hermes_cart': cart
     });
   } else {
     extracting_active = false; // cart is empty no extracting
     chrome.storage.sync.set({
       'hermes_cart': [],
-      function() {
-        callback();
-      }
     });
   }
 }
@@ -313,27 +419,42 @@ function append_to_cart(new_data) {
         callback(new_data);
       }
     }
-
     appendThenCall(new_data, old_cart, store_cart);
   });
 }
 
 function pull_from_cart(callback) {
+  var pulled;
+  var new_cart_count;
   chrome.storage.sync.get('hermes_cart', function(items) {
     var cart = items.hermes_cart;
     try {
-      var pulled = cart.shift();
+      pulled = cart.shift();
+      new_cart_count = cart.length;
     } catch (e) { // Catches if hermes_cart is empty
       extracting_active = false;
       save_new_message("Cart empty");
+      pulled = null;
+      new_cart_count = 0;
       return;
     }
-
     // pulled is passed to callback
     callback(pulled);
     // put cart back in modified state
     store_cart(cart);
-    save_new_message("Items remaining in cart: " + cart.length);
+    // TODO Announce - 1
+    try{
+    pop_port.postMessage({
+      action: 'cart count',
+      count: new_cart_count
+    });
+  } catch (e) {
+    make_send_pop_port({
+      action: 'cart count',
+      count: new_cart_count
+    });
+  }
+    console.log("Items remaining in cart: " + new_cart_count);
   });
 }
 // Event Listeners
@@ -345,35 +466,6 @@ On Message: call requestPages()
 Response Sent: None
  */
 
-chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
-  if (request.action === "checked_profiles") {
-    // if it's passing a list of profiles
-    // console.log("Received list of profiles");
-
-    // Begins cascade of events
-    // Starts with asking server what profiles are duplicates
-    // Server responds with duplicates removed
-    // Current cart is retrieved from storage
-    // Current cart has new profiles appended
-    // New cart is then written to storage
-    prunePages(request.checked, sendResponse);
-    var user_checked_message = "Selected " + request.checked.length + " to extract";
-    console.log(user_checked_message);
-    return true;
-  } else if (request.action === "extract_signal") {
-    if (request.content === 'start_extract') {
-      extracting_active = true;
-      save_new_message("Starting Extract");
-      paceExtract();
-    } else if (request.content === 'stop_extract') {
-      extracting_active = false;
-      save_new_message("Extract Paused");
-    } else if (request.content === 'clear_extract') {
-      store_cart(); // calling with params effectively clears cart
-      save_new_message("Cart emptied");
-    }
-  }
-});
 
 
 /* Function Chain That Handles Parsing AJAX ResponseText
@@ -411,6 +503,7 @@ function finishPattern(raw, start_code) {
     };
     end_code();
   } catch (e) {
+      console.log(e);
     extracting_active = false;
   }
 }
@@ -424,6 +517,7 @@ function startJSON(raw, start_code, end_code) {
     };
     json_code();
   } catch (e) {
+      console.log(e);
     extracting_active = false;
   }
 }
@@ -432,31 +526,33 @@ function finishJSON(code, counter, urls) {
   try {
     var s = function() {
       var c = JSON.stringify(code);
-      filter_json(c, retrieve_token);
+      filter_json(retrieve_token, c);
     };
     s();
   } catch (e) {
+      console.log(e);
     extracting_active = false;
   }
 }
 
 // Filtering AJAX response to send to server
 // Once complete, send to postData
-function filter_json(code, callback) {
+function filter_json(callback, code) {
   try {
     var mydata, positions, profile;
     code = JSON.parse(code);
-    positions = code['data']["positions"] || false;
-    profile = code['data']["profile"] || false;
+    positions = code.data.positions || false;
+    profile = code.data.profile || false;
     mydata = {};
     if (positions) {
-      mydata["positions"] = positions;
+      mydata.positions = positions;
     }
     if (profile) {
-      mydata["profile"] = profile;
+      mydata.profile = profile;
     }
-    callback(mydata);
+    callback(postData, mydata);
   } catch (e) {
+      console.log(e);
     extracting_active = false;
   }
 }
@@ -471,30 +567,55 @@ Urls - Array : Array of Urls
 // Popup.js is sending 25 or fewer profile_streaming
 // Before adding to our cart, ask server if any are duplicates
 
-function prunePages(request, callback) {
+function prunePages(request, user_token) {
+  var server_says;
   var xhttp;
   var user_request_len = request.length;
   xhttp = new XMLHttpRequest();
   xhttp.onreadystatechange = function() {
     if (this.readyState === 4 && this.status === 201) {
+
       console.log(this.responseText);
-      var urls_to_request = JSON.parse(this.responseText)['data'];
-      if (urls_to_request.length > 0) {
+      var urls_to_request = JSON.parse(this.responseText).data;
+      if (urls_to_request.length > 0 && urls_to_request.length !== user_request_len) {
         // Response is from server with non-duplicate Urls
         // Save them to cart
         append_to_cart(urls_to_request);
+        server_says = "You added " + user_request_len.toString() + " to cart. " + urls_to_request.length.toString() + " items will be extracted. Remainder are present on server, added to your active file.";
+      } else if (urls_to_request.length === 0) {
+        server_says = "You added " + user_request_len.toString() + " to cart. All are present on server and are now in your active file.";
+      } else if (urls_to_request.length > 0 && urls_to_request.length === user_request_len) {
+        append_to_cart(urls_to_request);
+        server_says = "You added " + user_request_len.toString() + " to cart. None present on server.";
+      } else {
+        append_to_cart(urls_to_request);
+        server_says = "You added " + user_request_len.toString() + " to cart.";
       }
-      var server_says = "You added " + user_request_len.toString() + " to cart. "
-       + urls_to_request.length.toString() + " items will be extracted. Remainder are present on server, added to your active file.";
       console.log(server_says);
       save_new_message(server_says);
-      callback;
+      try {
+        pop_port.postMessage({
+          action: 'prune_results',
+          count: urls_to_request.length
+        });
+      } catch (e) {
+        make_send_pop_port({
+          action: 'prune_results',
+          count: urls_to_request.length
+        });
+      }
+
+
     } else if (this.status === 400 || this.status === 401 || this.status === 404) {
-      var server_says = "Server rejected pruning request";
+      server_says = "Server rejected pruning request";
       console.log(server_says);
       save_new_message(server_says);
       token = undefined;
-      show_login(callback);
+      show_login();
+    } else if (this.status === 500) {
+      server_says = "Server error occured during pruning request";
+      console.log(server_says);
+      save_new_message(server_says);
     }
   };
   xhttp.open("POST", prune_url, true);
@@ -508,14 +629,14 @@ function prunePages(request, callback) {
 }
 
 function paceExtract() {
-  if (extracting_active) {
-    function smartWait() {
-      var wait_time = getRandomInt(5, 10);
-      setTimeout(function() {
-        pull_from_cart(doExtract);
-      }, wait_time);
+  function smartWait() {
+    var wait_time = getRandomInt(5, 10);
+    setTimeout(function() {
+      pull_from_cart(doExtract);
+    }, wait_time);
     }
-    smartWait();
+    if (extracting_active) {
+      smartWait();
   }
 }
 
@@ -529,8 +650,8 @@ function doExtract(target) {
     });
   } else {
     chrome.tabs.query({
-      active: true,
-      currentWindow: true
+      highlighted: true,
+
     }, function(tabs) { // Query returns active tab
       active_tab = tabs[0];
       chrome.tabs.sendMessage(tabs[0].id, {
@@ -544,12 +665,33 @@ function doExtract(target) {
 }
 
 function postData(filtered_ajax, user_token) {
+  var server_says;
   var xhttp;
   xhttp = new XMLHttpRequest();
   xhttp.onreadystatechange = function() {
     if (this.readyState === 4 && this.status === 201) {
-      paceExtract();
+      paceExtract(); // recursion
+      var shake_cart_message = {action: 'shake cart', count: -1};
+      try {
+      pop_port.postMessage(shake_cart_message);
+    } catch (e) {
+        console.log(e);
+      make_send_pop_port(shake_cart_message);
+  }
+
+
+
+    } else if (this.status === 400 || this.status === 401 | this.status === 404) {
+      token = undefined;
+      server_says = "Server rejected posting to profile";
+      save_new_message(server_says);
+      show_login();
+    } else if (this.status === 500) {
+      server_says = "Server error while posting profile";
+      // TODO add back to queue
+      save_new_message(server_says);
     }
+
   };
   xhttp.open("POST", post_data_url, true);
   xhttp.setRequestHeader("Content-type", "application/json");
