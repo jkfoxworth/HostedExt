@@ -74,28 +74,15 @@ function ajaxGet(url, callback){
             xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
         },
         complete: function (data){
-            console.log(data);
+
             callback({'action': 'ajax_done', 'data': data.responseText});
         }
     });
 }
 
-// Sending search results to popup.js
-function sendResults(ResultData) {
-    chrome.runtime.sendMessage(
-            // message - JSON
-            // Action is new_results to ensure we use the correct popup.js event listener
-            {action: "new_results", results:ResultData},
-            // responseCallback
-            function (response) {
-                console.log("Sent");
-                console.log(response);
-            });
-    }
-
     // Determine what page post_data_url is and run appropriate script
 var current_url = window.location.href;
-if(current_url.indexOf("smartsearch") >= 0) {
+if (current_url.indexOf("smartsearch") >= 0) {
     chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
         if (request.action === "fetch_results") {
             // if it's requesting results on page.
