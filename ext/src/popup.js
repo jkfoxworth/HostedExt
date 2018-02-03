@@ -49,7 +49,7 @@ function make_send_port(message) {
 // Listen for all messages
 chrome.runtime.onConnect.addListener(function(port) {
   if (port.name === 'background > popup') { // A port was just opened to speak with popup
-    // if any other ports open from background them close
+    // if any other ports open from background then close
     if (back_to_pop) {
       for (var i = 0; i < back_to_pop.length; i++) {
         if (i === back_to_pop.length - 1) {
@@ -72,6 +72,10 @@ chrome.runtime.onConnect.addListener(function(port) {
           var len_of_prune = msg.count;
           update_cart_qty(len_of_prune);
           break;
+        case 'shake cart':
+            update_cart_qty(msg.count);
+            break;
+
 
       }
     });

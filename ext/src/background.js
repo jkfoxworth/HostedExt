@@ -671,7 +671,15 @@ function postData(filtered_ajax, user_token) {
   xhttp.onreadystatechange = function() {
     if (this.readyState === 4 && this.status === 201) {
       paceExtract(); // recursion
-      // TODO message popup, cart minus -1
+      var shake_cart_message = {action: 'shake cart', count: -1};
+      try {
+      pop_port.postMessage(shake_cart_message);
+    } catch (e) {
+        console.log(e);
+      make_send_pop_port(shake_cart_message);
+  }
+
+
 
     } else if (this.status === 400 || this.status === 401 | this.status === 404) {
       token = undefined;
