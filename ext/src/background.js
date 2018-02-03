@@ -503,6 +503,7 @@ function finishPattern(raw, start_code) {
     };
     end_code();
   } catch (e) {
+      console.log(e);
     extracting_active = false;
   }
 }
@@ -516,6 +517,7 @@ function startJSON(raw, start_code, end_code) {
     };
     json_code();
   } catch (e) {
+      console.log(e);
     extracting_active = false;
   }
 }
@@ -524,17 +526,18 @@ function finishJSON(code, counter, urls) {
   try {
     var s = function() {
       var c = JSON.stringify(code);
-      filter_json(c, retrieve_token);
+      filter_json(retrieve_token, c);
     };
     s();
   } catch (e) {
+      console.log(e);
     extracting_active = false;
   }
 }
 
 // Filtering AJAX response to send to server
 // Once complete, send to postData
-function filter_json(code, callback) {
+function filter_json(callback, code) {
   try {
     var mydata, positions, profile;
     code = JSON.parse(code);
@@ -547,8 +550,9 @@ function filter_json(code, callback) {
     if (profile) {
       mydata.profile = profile;
     }
-    callback(mydata, postData);
+    callback(postData, mydata);
   } catch (e) {
+      console.log(e);
     extracting_active = false;
   }
 }
