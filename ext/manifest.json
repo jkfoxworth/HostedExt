@@ -2,7 +2,7 @@
 "update_url": "https://clients2.google.com/service/update2/crx",
 
   "name": "Hermes - Beta Version",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "manifest_version": 2,
   "description": "Hermes",
   "homepage_url": "http://estasney1.pythonanywhere.com",
@@ -20,7 +20,8 @@
     "default_icon": "icons/icon19_b.png",
     "default_title": "Hermes",
     "default_popup": "src/default.html",
-    "js": ["src/js/jquery/jquery.js", "src/js/bootstrap/js/bootstrap.js", "src/js/popper.min.js"],
+    "js": ["src/js/jquery/jquery.js", "src/js/bootstrap/js/bootstrap.js",
+       "src/js/popper.min.js", "src/js/d3/d3.js", "src/js/d3/radial-progress-chart.js"]
     "css": ["src/js/cart.css"]
   },
   "permissions": [
