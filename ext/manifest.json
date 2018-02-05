@@ -17,7 +17,7 @@
     "persistent": true
   },
   "browser_action": {
-    "default_icon": "icons/icon19_b.png",
+    "default_icon": "icons/icon19.png",
     "default_title": "Hermes",
     "default_popup": "src/default.html",
     "js": ["src/js/jquery/jquery.js", "src/js/bootstrap/js/bootstrap.js",
