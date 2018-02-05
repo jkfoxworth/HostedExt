@@ -404,9 +404,13 @@ function write_message(queue) {
 // Prune URLs cascade ends here
 function store_cart(cart) {
     if (cart) {
+      try{
         chrome.storage.sync.set({
             'hermes_cart': cart
         });
+      } catch (e) {
+        // TODO Error handle
+      }
     } else {
         extracting_active = false; // cart is empty no extracting
         chrome.storage.sync.set({
@@ -426,24 +430,31 @@ function append_to_cart(new_data) {
             $.each(all_cart, function(i, el) {
                 if ($.inArray(el, unique_cart) === -1) unique_cart.push(el);
             });
-            store_cart(unique_cart);
             try {
+              store_cart(unique_cart);
                 messagePopup({
                     action: 'prune_results',
                     count: unique_cart.length - old_cart.length
                 });
             } catch (e) {
+              messagePopup({
+                  action: 'cart max'
+              });
                 console.log(e);
             }
         } catch (e) { // No cart found, likely
             console.log(e);
-            store_cart(new_data);
+
             try {
+              store_cart(new_data);
                 messagePopup({
                     action: 'prune_results',
                     count: new_data.length
                 });
             } catch (e) {
+                messagePopup({
+                  action: 'cart max'
+                });
                 console.log(e);
             }
         }

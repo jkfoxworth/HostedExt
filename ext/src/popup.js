@@ -56,6 +56,10 @@ var radial = null;
                         break;
                     case 'activity request':
                         showAllowance(msg.data);
+                        break;
+                    case 'cart max':
+                      showCartMax();
+                      break;
                 }
             });
         }
@@ -179,6 +183,14 @@ function update_cart_qty(new_qty) {
         $cart.removeClass('shake');
         $('#shopping-cart-btn').removeClass('glow');
     }, 800);
+}
+
+function showCartMax(){
+  $cart = $('#shopping-cart-btn .badge');
+  $cart.addClass('flash');
+  setTimeout(function() {
+      $cart.removeClass('flash');
+  }, 1500);
 }
 
 function handleOpenLog() {
