@@ -1,0 +1,36 @@
+.mycontainer {
+  text-align: center;
+}
+
+.mycontainer div {
+  display: inline-block;
+  padding: 20px;
+  width: 250px;
+}
+
+.rbc-label-start {
+  font-family: fontawesome;
+  font-weight: bold;
+  font-size: 30px;
+}
+
+.rbc-center-text {
+  font-family: 'Roboto', 'Myriad Set Pro', 'Lucida Grande', 'Helvetica Neue', Helvetica, Arial;
+  fill: white;
+}
+
+.cartvis .rbc-center-text-line0 {
+  font-size: 95px;
+}
+
+.cartvis .rbc-center-text-line1 {
+  font-size: 20px;
+}
+
+.tokens .rbc-center-text-line0 {
+  font-size: 95px;
+}
+
+.tokens .rbc-center-text-line1 {
+  font-size: 20px;
+}

@@ -3,6 +3,7 @@
 var profiles_on_deck = [];
 var port_to_background = null;
 var port_from_background = null;
+var radial = null;
 
 // Run Immediately on Load Popup.js
 (function() {
@@ -44,11 +45,17 @@ var port_from_background = null;
                     case 'shake cart': // Animation showing new cart qty
                         update_cart_qty(msg.count);
                         break;
+                    case 'shake radial':
+                        shakeRadial(msg.count);
+                        break;
                     case 'show all messages':
                         show_messages(msg.messages);
                         break;
                     case 'cart cleared':
                         update_cart_qty(-999);
+                        break;
+                    case 'activity request':
+                        showAllowance(msg.data);
                 }
             });
         }
@@ -63,6 +70,8 @@ Messaging
 
 // Our port to message background
 function messageBackground(message) {
+    console.log("Message to background");
+    console.log(message);
     try {
         port_to_background.postMessage(message);
     } catch (e) {
@@ -109,6 +118,7 @@ function hide_element(selector) {
 }
 
 function show_login() {
+    setupBackgroundPort();
     $('#login_button').on('click', doLogin);
     hide_element('#actions');
     hide_element('#messages');
@@ -126,6 +136,7 @@ function show_action() {
     $('#open_log_button').on('click', checkMessages);
     $('#open_log_button').on('click', flip_log_button_text);
     checkCartSize(quietSetMasterCartSize);
+    askAllowance();
     // TODO Check Allowance
 }
 
@@ -133,6 +144,21 @@ function show_action() {
 function quietSetMasterCartSize(cart_size) {
     $cart = $('#shopping-cart-btn .badge');
     $cart.html(cart_size);
+}
+
+function askAllowance() {
+    messageBackground({
+        action: 'need activity'
+    });
+}
+
+function showAllowance(activity) {
+    if (radial) {
+        radial.update(activity.allowance_remain);
+    } else {
+        radial = initRadial(".cartvis", activity.allowance_remain, activity.allowance);
+        unhide_element('#d3div');
+    }
 }
 
 function update_cart_qty(new_qty) {
@@ -170,6 +196,7 @@ function new_login() {
 
 function new_logout() {
     hide_element('#actions');
+    hide_element('#d3div');
     show_login();
 }
 
@@ -203,6 +230,7 @@ function show_messages(messages) {
             class: "card card-block message_item",
             text: "...Nothing found in logs..."
         });
+        $('#collapseMessages').append(no_messages);
         console.log(e);
     }
 }
@@ -356,4 +384,63 @@ function extractSignals(say) {
             content: say
         });
     }
+}
+
+/*
+
+D3
+
+*/
+
+// Creates the radial progress chart
+// Returns the chart
+// Store in variable so that .update can be Called
+function initRadial(sel, start, max) {
+    var new_chart = new RadialProgressChart(sel, {
+        diameter: 200,
+        max: max,
+        round: true,
+        series: [{
+            labelStart: "",
+            value: start,
+            color: {
+                linearGradient: {
+                    x1: "0%",
+                    y1: "100%",
+                    x2: "50%",
+                    y2: "0%",
+                    spreadMethod: "pad"
+                },
+                stops: [{
+                        offset: "0%",
+                        "stop-color": "#fe08b5",
+                        "stop-opacity": 1
+                    },
+                    {
+                        offset: "100%",
+                        "stop-color": "#ff1410",
+                        "stop-opacity": 1
+                    }
+                ]
+            }
+        }],
+        center: {
+            content: [
+                function(value) {
+                    return value;
+                },
+                " OF " + max + " Profiles"
+            ],
+            y: 25
+        }
+    });
+    return new_chart;
+}
+
+function shakeRadial(new_count) {
+    radial.update(new_count);
+}
+
+function updateMaxText(new_text, sel) {
+    $(sel).textContent = new_text;
 }
