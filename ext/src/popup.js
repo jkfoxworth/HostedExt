@@ -429,7 +429,7 @@ function initRadial(sel, start, max) {
                 function(value) {
                     return value;
                 },
-                " OF " + max + " Tokens"
+                " OF " + max + " Profiles"
             ],
             y: 25
         }
