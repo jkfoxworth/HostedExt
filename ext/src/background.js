@@ -638,7 +638,7 @@ function prunePages(request, user_token) {
     } else if (this.status === 500) {
       server_says = "Server error occured during pruning request";
       messagePopup({
-        action: 'flash cart'
+        action: 'flash cart error'
       });
       save_new_message(server_says);
     }

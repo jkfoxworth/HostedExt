@@ -62,11 +62,13 @@ var radial = null;
                         showAllowance(msg.data);
                         break;
                     case 'cart max':
-                      flashCart();
+                      flashCartError();
                       break;
                     case 'flash cart':
                       flashCart();
                       break;
+                    case 'flash cart error':
+                      flashCartError();
                 }
             });
         }
