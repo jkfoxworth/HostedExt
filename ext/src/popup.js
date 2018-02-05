@@ -40,7 +40,11 @@ var radial = null;
                     case 'prune_results':
                         profiles_on_deck = [];
                         var len_of_prune = msg.count;
-                        update_cart_qty(len_of_prune);
+                        if (len_of_prune > 0) {
+                            update_cart_qty(len_of_prune);
+                        } else {
+                          flashCart();
+                        }
                         break;
                     case 'shake cart': // Animation showing new cart qty
                         update_cart_qty(msg.count);
@@ -58,7 +62,10 @@ var radial = null;
                         showAllowance(msg.data);
                         break;
                     case 'cart max':
-                      showCartMax();
+                      flashCart();
+                      break;
+                    case 'flash cart':
+                      flashCart();
                       break;
                 }
             });
@@ -185,12 +192,12 @@ function update_cart_qty(new_qty) {
     }, 800);
 }
 
-function showCartMax(){
+function flashCart(){
   $cart = $('#shopping-cart-btn .badge');
   $cart.addClass('flash');
   setTimeout(function() {
       $cart.removeClass('flash');
-  }, 1500);
+  }, 3000);
 }
 
 function handleOpenLog() {
