@@ -21,8 +21,8 @@
     "default_title": "Hermes",
     "default_popup": "src/default.html",
     "js": ["src/js/jquery/jquery.js", "src/js/bootstrap/js/bootstrap.js",
-       "src/js/popper.min.js", "src/js/d3/d3.js", "src/js/d3/radial-progress-chart.js"]
-    "css": ["src/js/cart.css"]
+       "src/js/popper.min.js", "src/js/d3/d3.js", "src/js/d3/radial-progress-chart.js"],
+    "css": ["src/js/cart.css", "src/js/visuals.css"]
   },
   "permissions": [
     "tabs",

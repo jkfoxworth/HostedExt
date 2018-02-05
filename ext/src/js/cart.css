@@ -1,20 +1,20 @@
 body {
   padding-top: 15px;
-  background-color: #262428;
+  background-color: #1d2124;
 }
 
-.btn {
+.cbtn {
   -moz-border-radius: 0;
   -webkit-border-radius: 0;
-  border-radius: 0;
+  border-radius: 5px;
   border: none;
 }
-.btn .badge {
+.cbtn .cbadge {
   background-color: white;
   color: #668f3d;
 }
 
-.btn-default, .btn-default:focus {
+.cbtn-default, .cbtn-default:focus {
   background-color: #668f3d;
   color: white;
   -moz-transition: box-shadow 0.1s ease-out;
@@ -22,14 +22,14 @@ body {
   -webkit-transition: box-shadow 0.1s ease-out;
   transition: box-shadow 0.1s ease-out;
 }
-.btn-default:hover, .btn-default:focus:hover {
+.cbtn-default:hover, .cbtn-default:focus:hover {
   background-color: #668f3d;
   -moz-box-shadow: inset 0 0 0 5px #4d6b2e;
   -webkit-box-shadow: inset 0 0 0 5px #4d6b2e;
   box-shadow: inset 0 0 0 5px #4d6b2e;
   color: white;
 }
-.btn-default:active, .btn-default:focus:active {
+.cbtn-default:active, .cbtn-default:focus:active {
   background-color: #597d36;
 }
 

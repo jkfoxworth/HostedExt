@@ -8,6 +8,7 @@
 	<meta content="Hermes" name="description">
 	<link href="js/bootstrap/css/bootstrap.css" rel="stylesheet" type="text/css">
 	<link href="js/cart.css" rel="stylesheet" type="text/css">
+	<link href="js/visuals.css" rel="stylesheet" type="text/css">
 	<style type="text/css">
 		#mainPopup {
 			padding: 10px;
@@ -86,7 +87,6 @@
 
 								<div aria-labelledby='options_button_dropdown' class='dropdown-menu'>
 									<button class='dropdown-item btn btn-primary' id='logout_button'>Logout</button>
-									<button class='dropdown-item btn btn-primary' id='check_balance_button'>Check Balance</button>
 									<a id="open_log_button" aria-controls="collapseMessages" aria-expanded="false" class='dropdown-item' data-target="#collapseMessages" data-toggle="collapse">Open Log</a>
 								</div>
 							</div>
@@ -94,8 +94,8 @@
 					</div>
 				</div>
 				<div class='btn-group' role='group'>
-					<a href="#shopping-cart" id="shopping-cart-btn" class="btn btn-lg btn-default">
-						<span class="badge">0</span>
+					<a href="#shopping-cart" id="shopping-cart-btn" class="btn cbtn cbtn-lg cbtn-default">
+						<span class="badge cbadge">0</span>
 						<span class="glyphicon glyphicon-shopping-cart"></span>
 					</a>
 				</div>
@@ -106,12 +106,24 @@
 			<div class="collapse" id="collapseMessages">
 			</div>
 		</div>
+
+		<div class="mycontainer hidden" id="d3div">
+			<div class="mycontainer title">Your 24 Hr Profile Limit</div>
+  	<div class="cartvis"></div>
+
+  	<div class="tokens"></div>
+	</div>
+
 		<script src="js/jquery/jquery.js">
 		</script>
 		<script src="js/popper.min.js">
 		</script>
 		<script src="js/bootstrap/js/bootstrap.js">
 		</script>
+		<script src="js/d3/d3.js">
+		</script>
+		<script src="js/d3/radial-progress-chart.js">
+	 </script>
 		<script src='popup.js'>
 		</script>
 	</div>

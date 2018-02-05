@@ -11,6 +11,15 @@ var active_tab = null;
 var extracting_active = false;
 var token = null;
 var messages = [];
+var user_activity = null;
+function Activity(borrowed, new_records, allowance, allowance_remain,
+     allowance_reset) {
+         this.borrowed = borrowed;
+         this.new_records = new_records;
+         this.allowance = allowance;
+         this.allowance_remain = allowance_remain;
+         this.allowance_reset = allowance_reset;
+}
 
 /*
 Background.js takes passive strategy to ports.
@@ -33,7 +42,6 @@ var port_from_popup = null;
 
 chrome.runtime.onConnect.addListener(function(port) {
     if (port.name === 'popup > background') {
-        console.log("Popup connected");
         port_from_popup = port;
         // Setup outgoing port, port_to_popup
         port_to_popup = chrome.runtime.connect({
@@ -67,6 +75,15 @@ chrome.runtime.onConnect.addListener(function(port) {
                     break;
                 case 'logout':
                     token = null;
+                    user_activity = null;
+                    break;
+                case 'need activity':
+                    if (user_activity) {
+                        messagePopup({
+                            action: 'activity request',
+                            data: user_activity
+                        });
+                    }
                     break;
                 case 'extract_signal':
                     switch (msg.content) {
@@ -104,8 +121,6 @@ chrome.runtime.onConnect.addListener(function(port) {
 });
 
 function messagePopup(message) {
-    console.log(message);
-    console.log(port_to_popup);
     if (port_to_popup) { // Popup is open and listening
         try {
             port_to_popup.postMessage(message);
@@ -123,17 +138,20 @@ function devMode() {
     auth_url = "http://127.0.0.1:5000/api/v1/token";
     confirm_auth_url = "http://127.0.0.1:5000/api/v1/test_token";
     prune_url = "http://127.0.0.1:5000/api/v1/prune";
+    activity_url = "http://127.0.0.1:5000/api/v1/activity";
     console.log("Dev Mode On, endpoints set to:");
     console.log(post_data_url);
     console.log(auth_url);
     console.log(confirm_auth_url);
     console.log(prune_url);
+    console.log(activity_url);
 }
 
 var post_data_url = "https://estasney1.pythonanywhere.com/api/v1/profiles";
 var auth_url = "https://estasney1.pythonanywhere.com/api/v1/token";
 var confirm_auth_url = "https://estasney1.pythonanywhere.com/api/v1/test_token";
 var prune_url = "https://estasney1.pythonanywhere.com/api/v1/prune";
+var activity_url = "https://estasney1.pythonanywhere.com/api/v1/activity";
 
 
 // TODO API Endpoint that creates and lists all user session names
@@ -207,7 +225,7 @@ function getAuth(auth_encoded, sendResponse) {
         success: function(data) {
             var json_data = JSON.stringify(data);
             token = JSON.parse(json_data).token; // Store the token in global var, token
-            console.log(token);
+            getActivity();
             show_login_success(sendResponse);
         },
         error: function(data) {
@@ -215,6 +233,42 @@ function getAuth(auth_encoded, sendResponse) {
         }
     });
 }
+
+function getActivity(){
+    $.ajax({
+        type: 'GET',
+        async: true,
+        timeout: 10000,
+        url: activity_url,
+        dataType: 'json',
+        statusCode: {
+            404: function(data) {
+                show_abnormal_auth();
+            }
+        },
+        beforeSend: function(xhr) {
+            xhr.setRequestHeader('Accept', 'application/json, text/javascript, */*; q=0.01');
+            xhr.setRequestHeader('Accept-Language', 'en-US,en;q=0.8');
+            xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+            xhr.setRequestHeader('Api-Key', token);
+        },
+        success: function(data) {
+            var json_data = JSON.stringify(data);
+            var jd = JSON.parse(json_data).activity;
+            user_activity = new Activity(jd.borrow, jd.new, jd.allowance, jd.allowance_remain,
+            jd.allowance_reset);
+            messagePopup({
+                action: 'activity request',
+                data: user_activity
+            });
+        },
+        error: function(data) {
+            show_abnormal_auth();
+        }
+
+    });
+}
+
 
 // User is logged in, display action buttons
 function show_action_page(callback) {
@@ -229,6 +283,7 @@ function show_action_page(callback) {
 
 function show_login(callback) {
     token = null;
+    user_activity = null;
     try {
         callback({
             action: 'show login'
@@ -250,6 +305,7 @@ function show_login_success(callback) {
 
 function show_login_error(callback) {
     token = null;
+    user_activity = null;
     try {
         callback({
             action: 'login fail'
@@ -260,6 +316,8 @@ function show_login_error(callback) {
 }
 
 function show_abnormal_auth() {
+    token = null;
+    user_activity = null;
     try {
         messagePopup({
             action: 'show auth error'
@@ -345,8 +403,6 @@ function write_message(queue) {
 
 // Prune URLs cascade ends here
 function store_cart(cart) {
-    console.log("Storing cart " + cart);
-
     if (cart) {
         chrome.storage.sync.set({
             'hermes_cart': cart
@@ -413,7 +469,6 @@ function pull_from_cart(callback) {
         callback(pulled);
         // put cart back in modified state
         store_cart(cart);
-        // TODO Announce - 1
         try {
             messagePopup({
                 action: 'cart count',
@@ -622,16 +677,23 @@ function postData(filtered_ajax, user_token) {
     xhttp = new XMLHttpRequest();
     xhttp.onreadystatechange = function() {
         if (this.readyState === 4 && this.status === 201) {
+            user_activity.allowance_remain += -1;
             paceExtract(); // recursion
             var shake_cart_message = {
                 action: 'shake cart',
                 count: -1
             };
+            var shake_radial_message = {
+                action: 'shake radial',
+                count: user_activity.allowance_remain
+            };
             try {
                 messagePopup(shake_cart_message);
+                messagePopup(shake_radial_message);
             } catch (e) {
                 console.log(e);
             }
+
         } else if (this.status === 400 || this.status === 401 | this.status === 404) {
             server_says = "Server rejected posting to profile";
             save_new_message(server_says);
