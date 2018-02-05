@@ -200,6 +200,14 @@ function flashCart(){
   }, 3000);
 }
 
+function flashCartError(){
+  $cart = $('#shopping-cart-btn .badge');
+  $cart.addClass('flash-error');
+  setTimeout(function() {
+      $cart.removeClass('flash-error');
+  }, 3000);
+}
+
 function handleOpenLog() {
     // TODO setInterval updates
 }
