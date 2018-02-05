@@ -39,6 +39,18 @@ body {
   animation: shake 0.3s 2 alternate;
 }
 
+.flash {
+  -webkit-animation: flash 0.3s 5 alternate;
+  -moz-animation: flash 0.3s 5 alternate;
+  animation: flash 0.3s 5 alternate;
+}
+
+.flash-error{
+  -webkit-animation: flash-error 0.3s 5 alternate;
+  -moz-animation: flash-error 0.3s 5 alternate;
+  animation: flash-error 0.3s 5 alternate;
+}
+
 glyphicon-shopping-cart {
   position: relative;
 }
@@ -78,6 +90,36 @@ glyphicon-shopping-cart {
   66% {
     transform: rotate(-30deg);
   }
+}
+@keyframes flash-error {
+  0%   {background-color:#668f3d};
+  50%  {background-color:red};
+  100% {background-color:#668f3d};
+}
+@-moz-keyframes flash-error {
+  0%   {background-color:#668f3d};
+  50%  {background-color:red};
+  100% {background-color:#668f3d};
+}
+@-webkit-keyframes flash-error {
+  0%   {background-color:#668f3d};
+  50%  {background-color:red};
+  100% {background-color:#668f3d};
+}
+@keyframes flash {
+  0%   {background-color:#668f3d};
+  50%  {background-color:yellow};
+  100% {background-color:#668f3d};
+}
+@-moz-keyframes flash {
+  0%   {background-color:#668f3d};
+  50%  {background-color:yellow};
+  100% {background-color:#668f3d};
+}
+@-webkit-keyframes flash {
+  0%   {background-color:#668f3d};
+  50%  {background-color:yellow};
+  100% {background-color:#668f3d};
 }
 @-moz-keyframes cart-run {
   from {
