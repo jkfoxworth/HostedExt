@@ -41,7 +41,6 @@ function SearchResult(fullName, profile_url, job_title_employer) {
 function fetchResultData(callback) {
     var profile_elements = $('.search-result');
     var results = [];
-
     for (var i = 0; i < profile_elements.length; i++) {
         var i_element = profile_elements[i];
         var fullname = i_element.querySelector(".search-result-profile-link").text;
@@ -53,7 +52,7 @@ function fetchResultData(callback) {
                 current_job_element = i_element.querySelector('.headline');
             }
             var job_text = current_job_element.innerHTML.split("<span")[0];
-            return job_text
+            return job_text;
         };
 
         var new_person = new SearchResult(fullname, profile_url, job_title(i_element));
@@ -75,42 +74,26 @@ function ajaxGet(url, callback){
             xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
         },
         complete: function (data){
-            console.log(data);
+
             callback({'action': 'ajax_done', 'data': data.responseText});
         }
     });
 }
 
-// Sending search results to popup.js
-function sendResults(ResultData) {
-    chrome.runtime.sendMessage(
-            // message - JSON
-            // Action is new_results to ensure we use the correct popup.js event listener
-            {action: "new_results", results:ResultData},
-            // responseCallback
-            function (response) {
-                console.log("Sent");
-                console.log(response);
-            });
-    }
-
     // Determine what page post_data_url is and run appropriate script
 var current_url = window.location.href;
-if(current_url.indexOf("smartsearch") >= 0) {
+if (current_url.indexOf("smartsearch") >= 0) {
     chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
         if (request.action === "fetch_results") {
             // if it's requesting results on page.
-
             // Call function postData
-            fetchResultData(sendResults);
-            // No sendResponse needed, send empty object
-            sendResponse();
-        } else if (request.action === 'get_page') {
+            fetchResultData(sendResponse);
+            return true;
+            } else if (request.action === 'get_page') {
             // Use callback
-
             console.log(request.target);
             ajaxGet(request.target, sendResponse);
             return true; // return true recommended from chrome extension
             }
-        })
+        });
     }

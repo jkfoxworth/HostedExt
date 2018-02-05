@@ -1,50 +1,99 @@
 // popup.js
 
+var profiles_on_deck = [];
+var port_to_background = null;
+var port_from_background = null;
+var radial = null;
 
+// Run Immediately on Load Popup.js
+(function() {
+    chrome.runtime.sendMessage({
+            action: "get user state"
+        },
+        function(response) {
+            handleUserState(response);
+        });
 
-chrome.runtime.sendMessage(
-    {action: "get user state"},
-    function (response) {
-        handleUserState(response)
+    function handleUserState(response) {
+        if (response.action === "show login") {
+            show_login();
+        } else if (response.action === 'show actions') {
+            show_action();
+        } else if (response.action === 'show login error') {
+            show_login_error();
+        }
+    }
+
+    // Listen for background setting up a port to popup
+    chrome.runtime.onConnect.addListener(function(port) {
+        if (port.name === 'background > popup') {
+            // A port was just opened to speak with popup
+            if (port_from_background) { // This port is now dead
+                port_from_background.disconnect();
+                port_from_background = port;
+            }
+            port.onMessage.addListener(function(msg) {
+                switch (msg.action) { // action will determine reaction
+                    case 'show auth error': // If server returns 400 sometime after login
+                        doLogout();
+                        break;
+                    case 'prune_results':
+                        profiles_on_deck = [];
+                        var len_of_prune = msg.count;
+                        update_cart_qty(len_of_prune);
+                        break;
+                    case 'shake cart': // Animation showing new cart qty
+                        update_cart_qty(msg.count);
+                        break;
+                    case 'shake radial':
+                        shakeRadial(msg.count);
+                        break;
+                    case 'show all messages':
+                        show_messages(msg.messages);
+                        break;
+                    case 'cart cleared':
+                        update_cart_qty(-999);
+                        break;
+                    case 'activity request':
+                        showAllowance(msg.data);
+                }
+            });
+        }
     });
-
-
+})();
 /*
 
-View Functions
-==============
-
-onmessage event listener
-    - calls appropriate view function based on message
-
-show_login()
-    - Appends a login form to the mainPoup
-
-handleUserState()
-    - Calls appropriate cascade of functions based on user's current authentication state
+Messaging
+========
 
 */
 
-function handleUserState(response) {
-    if (response.action === "show login") {
-        show_login();
-    } else if (response.action === 'show actions') {
-        show_action();
-    } else if (response.action === 'show login error') {
-        show_login_error();
+// Our port to message background
+function messageBackground(message) {
+    console.log("Message to background");
+    console.log(message);
+    try {
+        port_to_background.postMessage(message);
+    } catch (e) {
+        port_to_background = chrome.runtime.connect({
+            name: 'popup > background'
+        });
+        port_to_background.onDisconnect.addListener(function(msg) {
+            port_to_background = null;
+            port_from_background = null;
+        });
+        port_to_background.postMessage(message);
     }
 }
 
-function handleLoginResponse(response){
-    if (response) {
-        if (response.action === 'login success') {
-            new_login();
-        } else if(response.action === 'login fail') {
-            show_login_error();
-        }
-    } else {
-        show_login_error();
-    }
+function setupBackgroundPort() {
+    port_to_background = chrome.runtime.connect({
+        name: 'popup > background'
+    });
+    port_to_background.onDisconnect.addListener(function(msg) {
+        port_to_background = null;
+        port_from_background = null;
+    });
 }
 
 
@@ -55,28 +104,85 @@ DOM Manipulation
 
  */
 function unhide_element(selector) {
-  var current_class = $(selector).prop('class');
-  var new_class = current_class.replace('hidden', '').trim();
-  $(selector).prop('class', new_class);
+    var current_class = $(selector).prop('class');
+    var new_class = current_class.replace(/hidden/g, '').trim();
+    $(selector).prop('class', new_class);
 }
 
 function hide_element(selector) {
-  var current_class = $(selector).prop('class');
-  var new_class = current_class + " hidden";
-  $(selector).prop('class', new_class);
+    var current_class = $(selector).prop('class');
+    if (current_class.indexOf("hidden") === -1) {
+        var new_class = current_class + " hidden";
+        $(selector).prop('class', new_class);
+    }
 }
-
 
 function show_login() {
-  $('#login_button').on('click', doLogin);
-  unhide_element('#login');
+    setupBackgroundPort();
+    $('#login_button').on('click', doLogin);
+    hide_element('#actions');
+    hide_element('#messages');
+    unhide_element('#login');
 }
 
-
 function show_action() {
-  $('#logout_button').on('click', doLogout);
-  $('#select_profiles_button').on('click', requestResults);
-  unhide_element('#actions');
+    setupBackgroundPort();
+    unhide_element('#actions');
+    $('#logout_button').on('click', doLogout);
+    $('#select_button_dropdown').on('click', requestResults);
+    $('#start_extract').on('click', signalStartExtract);
+    $('#pause_extract').on('click', signalStopExtract);
+    $('#clear_extract').on('click', signalClearExtract);
+    $('#open_log_button').on('click', checkMessages);
+    $('#open_log_button').on('click', flip_log_button_text);
+    checkCartSize(quietSetMasterCartSize);
+    askAllowance();
+    // TODO Check Allowance
+}
+
+//
+function quietSetMasterCartSize(cart_size) {
+    $cart = $('#shopping-cart-btn .badge');
+    $cart.html(cart_size);
+}
+
+function askAllowance() {
+    messageBackground({
+        action: 'need activity'
+    });
+}
+
+function showAllowance(activity) {
+    if (radial) {
+        radial.update(activity.allowance_remain);
+    } else {
+        radial = initRadial(".cartvis", activity.allowance_remain, activity.allowance);
+        unhide_element('#d3div');
+    }
+}
+
+function update_cart_qty(new_qty) {
+    // update global
+    $cart = $('#shopping-cart-btn .badge');
+    $cartIcon = $('#shopping-cart-btn .glyphicon');
+    $cartQty = parseInt($cart.html());
+    $cartQty += parseInt(new_qty);
+    if ($cartQty < 0) {
+        $cartQty = 0;
+    }
+    $cart.html($cartQty.toString());
+    $cartIcon.addClass('cart-run');
+    $cart.addClass('shake');
+    $('#shopping-cart-btn').addClass('glow');
+    setTimeout(function() {
+        $cartIcon.removeClass('cart-run');
+        $cart.removeClass('shake');
+        $('#shopping-cart-btn').removeClass('glow');
+    }, 800);
+}
+
+function handleOpenLog() {
+    // TODO setInterval updates
 }
 
 function show_login_error() {
@@ -90,31 +196,115 @@ function new_login() {
 
 function new_logout() {
     hide_element('#actions');
-    hide_element('#results');
+    hide_element('#d3div');
     show_login();
 }
 
-function allow_extraction() {
-    // Change CSS to show extract button is enabled
-    $('#extract_profiles_button').prop('class', 'btn btn-secondary');
-    $('#extract_profiles_button').on('click', makeExtractList);
+function flip_log_button_text() {
+    var new_text;
+    var current_text = $('#open_log_button').prop('textContent');
+    if (current_text.indexOf("Open") === -1) { // It says close
+        new_text = "Open Log";
+    } else {
+        new_text = "Close Log";
+    }
+    $('#open_log_button').prop('textContent', new_text);
+}
+
+function show_messages(messages) {
+    unhide_element('#messages');
+
+    $('.message_item').remove();
+    try {
+        for (var i = 0; i < messages.length; i++) {
+            var message_element = $("<div>", {
+                id: ("message_" + i.toString()),
+                class: "card card-block message_item",
+                text: messages[i]
+            });
+            $('#collapseMessages').append(message_element);
+        }
+    } catch (e) {
+        var no_messages = $("<div>", {
+            id: "message_0",
+            class: "card card-block message_item",
+            text: "...Nothing found in logs..."
+        });
+        $('#collapseMessages').append(no_messages);
+        console.log(e);
+    }
+}
+
+function updateItemsAvailable(count) {
+    $('#add_to_cart_count').prop('textContent', count);
+    unhide_element('#add_to_cart_count');
+    $('#add_to_cart').on('click', makeExtractList);
+}
+
+function styleResults(SearchResults) {
+    // Show number in badge
+    try {
+        updateItemsAvailable(SearchResults.length.toString());
+    } catch (e) {
+        updateItemsAvailable('0');
+    }
+    // Clear profiles on deck
+    profiles_on_deck = [];
+    for (var i = 0; i < SearchResults.length; i++) {
+        profiles_on_deck.push(SearchResults[i].profile_url);
+    }
 }
 
 /*
+
+Storage
+=======
+
+*/
+
+// Check sync storage for messages from background
+function checkMessages() {
+    messageBackground({
+        action: 'check messages'
+    });
+}
+
+function checkCartSize(callback) {
+    chrome.storage.sync.get('hermes_cart', function(items) {
+        var cart_size = items.hermes_cart.length;
+        console.log("Cart size found is " + cart_size);
+        callback(cart_size);
+    });
+}
 
 /*
 
 Messaging Functions
 ===================
 
-doLogin - event listener for user pressing login button
-doLogout - event listener for user pressing logout button. Sets 'token' to null in chrome storage and changes popup to login
-
-
-credToBackground - sends the values to background.js for handling
-
-requestResults() - sends message intended for inject.js to get the results from page
  */
+
+function handleLoginResponse(response) {
+    if (response) {
+        if (response.action === 'login success') {
+            new_login();
+        } else if (response.action === 'login fail') {
+            show_login_error();
+        }
+    } else {
+        show_login_error();
+    }
+}
+
+function credToBackground(auth_string) {
+    chrome.runtime.sendMessage({
+            action: "user login submit",
+            data: auth_string
+        },
+        function(response) {
+            handleLoginResponse(response);
+        });
+}
 
 function doLogin() {
     var username = $('#user_id').val();
@@ -124,109 +314,133 @@ function doLogin() {
 }
 
 function doLogout() {
-    chrome.storage.sync.set({'token': null});
     new_logout();
+    messageBackground({
+        action: 'logout'
+    });
 }
-
-function credToBackground(auth_string){
-    chrome.runtime.sendMessage(
-        {action: "user login submit", data:auth_string},
-        function (response) {
-            handleLoginResponse(response);
-        });
-}
-
-
 
 function requestResults() {
-    chrome.tabs.query({active: true, currentWindow: true}, function (tabs) {
+    chrome.tabs.query({
+        active: true
+    }, function(tabs) {
         chrome.tabs.sendMessage(
-            tabs[0].id, {action: "fetch_results"},
-            function (response) {
+            tabs[0].id, {
+                action: "fetch_results"
+            },
+            function(response) {
+                styleResults(response);
             });
     });
 }
 
-// Awaits message from inject.js. Message contains SearchResults
-chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
-    if (request.action === "new_results") {
-        styleResults(request.results); // Response Data to HTML
-        sendResponse();
-    }
-});
-
-// Receives SearchResult object from inject.js
-// Generates HTML on popup.html from objects
-function styleResults(SearchResults){
-
-    // The table is 'invisible' unhide it
-    $('#results_table').prop('class', 'table');
-    for (var i = 0; i < SearchResults.length; i++) {
-        var i_result = SearchResults[i];
-
-        var row_id_attr = 'row-' + i.toString();
-        var row_id_sel = '#row-' + i.toString();
-
-        var row_html = "<tr>" +
-            "<th scope='row' id='" + row_id_attr + "'><input type='checkbox' checked></th>" +
-            "<td class='name_link' data='" + i_result.profile_url + "'>" + i_result.fullName + "</td>" +
-            "<td>" + i_result.job_title + "</td>" +
-            "<td>" + i_result.employer + "</td>" +
-            "</tr>";
-
-        $('#results_body').append(row_html)
-    }
-    // Add event listener for select all checkbox
-    $('#select_all').on('click', masterCheckboxListen);
-    allow_extraction();
-}
-
-// Function that applies the checked attribute of the 'select all' checkbox to all other checkboxes
-
-function masterCheckboxListen() {
-    // Check the 'checked' property on click. The property is evaluated AFTER the click. Checked to unchecked
-    // shows False
-    var masterCheckboxChecked= $('#select_all').prop('checked');
-    $("#results_body tr th[scope='row'] input").prop('checked', masterCheckboxChecked);
-}
-
-// After styleResults is called, make Begin Extraction Available
-
-// Gets the URLS the user has selected
-// These are passed to background.js
-
-function makeExtractList (){
-    // Generate array of URL's that have been selected
-    var checked_profiles = [];
-    var profile_links = $(".name_link");
-    var popup_checkboxes = $("#results_body input");
-
-
-    for (var i = 0; i < profile_links.length; i++) {
-        var i_profile = profile_links.eq(i);
-        var i_checkbox = popup_checkboxes.eq(i);
-        if (i_checkbox.prop('checked') === true) {
-            // if checkbox is checked
-            // get the post_data_url so we can make a request
-            var i_url = i_profile.attr('data');
-            checked_profiles.push(i_url);
-        }
-        // only send list when complete
-        if (i === profile_links.length - 1) {
-            sendPageList(checked_profiles);
-        }
-    }
-}
-
-
 // Function that passes checked URLs
-function sendPageList(checked_profiles)  {
-    chrome.runtime.sendMessage(
-        // message - JSON
-        // Action is new_clip to ensure we use the correct background.js event listener
-        {action: "checked_profiles", checked:checked_profiles},
-        // responseCallback
-        function (response) {
-            // console.log(response);
+function sendPageList(checked_profiles) {
+    try {
+        port.postMessage({
+            action: 'checked_profiles',
+            checked: checked_profiles
         });
+    } catch (e) {
+        messageBackground({
+            action: 'checked_profiles',
+            checked: checked_profiles
+        });
+    }
+}
+
+function makeExtractList() {
+    // Generate array of URL's that have been pushed to global
+    sendPageList(profiles_on_deck);
+}
+
+/*
+
+Messaging - Extraction
+
+*/
+
+function signalStartExtract() {
+    extractSignals('start_extract');
+}
+
+function signalStopExtract() {
+    extractSignals('stop_extract');
+}
+
+function signalClearExtract() {
+    extractSignals('clear_extract');
+}
+
+function extractSignals(say) {
+    try {
+        port.postMessage({
+            action: "extract_signal",
+            content: say
+        });
+    } catch (e) {
+        messageBackground({
+            action: "extract_signal",
+            content: say
+        });
+    }
+}
+
+/*
+
+D3
+
+*/
+
+// Creates the radial progress chart
+// Returns the chart
+// Store in variable so that .update can be Called
+function initRadial(sel, start, max) {
+    var new_chart = new RadialProgressChart(sel, {
+        diameter: 200,
+        max: max,
+        round: true,
+        series: [{
+            labelStart: "",
+            value: start,
+            color: {
+                linearGradient: {
+                    x1: "0%",
+                    y1: "100%",
+                    x2: "50%",
+                    y2: "0%",
+                    spreadMethod: "pad"
+                },
+                stops: [{
+                        offset: "0%",
+                        "stop-color": "#fe08b5",
+                        "stop-opacity": 1
+                    },
+                    {
+                        offset: "100%",
+                        "stop-color": "#ff1410",
+                        "stop-opacity": 1
+                    }
+                ]
+            }
+        }],
+        center: {
+            content: [
+                function(value) {
+                    return value;
+                },
+                " OF " + max + " Profiles"
+            ],
+            y: 25
+        }
+    });
+    return new_chart;
+}
+
+function shakeRadial(new_count) {
+    radial.update(new_count);
+}
+
+function updateMaxText(new_text, sel) {
+    $(sel).textContent = new_text;
 }
