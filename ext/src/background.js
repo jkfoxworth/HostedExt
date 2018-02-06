@@ -89,6 +89,9 @@ chrome.runtime.onConnect.addListener(function(port) {
             });
           }
           break;
+        case 'refresh active file':
+          getActivity();
+          break;
         case 'extract_signal':
           switch (msg.content) {
             case 'start_extract':
@@ -264,7 +267,7 @@ function getActivity() {
       active_file = jd.active_file;
       messagePopup({
         action: 'activity request',
-        data: user_activity
+        data: user_activity,
       });
     },
     error: function(data) {

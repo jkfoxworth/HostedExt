@@ -5,7 +5,7 @@
   "version": "0.4.4",
   "manifest_version": 2,
   "description": "Hermes",
-  "homepage_url": "http://estasney1.pythonanywhere.com",
+  "homepage_url": "https://estasney1.pythonanywhere.com",
   "icons": {
     "16": "icons/icon16.png",
     "48": "icons/icon48.png",
