@@ -9,10 +9,15 @@ GLOBALS
 // Global var to store the tab id where extract was called
 var active_tab = null;
 var extracting_active = false;
+var bulk_extracting = false;
+var bulk_cart = [];
+var bulk_cart_master = [];
+var bulk_cap = 0;
 var token = null;
 var messages = [];
 var user_activity = null;
 var active_file = null;
+
 
 function Activity(borrowed, new_records, allowance, allowance_remain,
   allowance_reset, active_file_name) {
@@ -92,6 +97,9 @@ chrome.runtime.onConnect.addListener(function(port) {
         case 'refresh active file':
           getActivity();
           break;
+        case 'bulk extract':
+          startBulkExtract(msg.count);
+          break;
         case 'extract_signal':
           switch (msg.content) {
             case 'start_extract':
@@ -111,11 +119,14 @@ chrome.runtime.onConnect.addListener(function(port) {
               break;
             case 'stop_extract':
               extracting_active = false;
+              bulk_extracting = false;
               save_new_message("Extract Paused");
               break;
             case 'clear_extract':
               store_cart(); // calling with params effectively clears cart
               save_new_message("Cart emptied");
+              extracting_active = false;
+              bulk_extracting = false;
               messagePopup({
                 action: 'cart cleared'
               });
@@ -277,8 +288,84 @@ function getActivity() {
   });
 }
 
-function getActiveFile(){
+function messageInjectBulk() {
+  if (active_tab) { // global
+    chrome.tabs.sendMessage(active_tab.id, {
+      action: 'fetch_results',
+    }, function(response) {
+      console.log(response);
+      receiveBulkCart(response.results); // Append to bulk cart
+    });
+  } else {
+    chrome.tabs.query({
+      highlighted: true,
+    }, function(tabs) { // Query returns active tab
+      active_tab = tabs[0];
+      chrome.tabs.sendMessage(tabs[0].id, {
+        action: 'fetch_results',
+      }, function(response) {
+        console.log(response);
+        receiveBulkCart(response.results); // Starts cascade, ends with postData
+      });
+    });
+  }
+}
 
+function receiveBulkCart(results) {
+  if (bulk_cart) {
+    for (var i = 0; i < results.length; i++) {
+      if (i < (results.length - 1)) {
+        bulk_cart.push(results[i].profile_url);
+      } else {
+        cartReady();
+      }
+    }
+  } else {
+    bulk_cart = [];
+    for (var y = 0; y < results.length; y++) {
+      if (y < (results.length - 1)) {
+        bulk_cart.push(results[y].profile_url);
+      } else {
+        cartReady();
+      }
+    }
+  }
+}
+
+function cartReady() {
+  // Disposition cart via prune or extract
+  retrieve_token(pruneForBulk, bulk_cart);
+}
+
+function bulkCartReady(){
+  // pruned are in File
+  // unpruned are stored in global cart
+  // proceed to next page
+  if (active_tab) { // global
+    chrome.tabs.sendMessage(active_tab.id, {
+      action: 'next_page',
+    }, function(response) {
+      // # TODO Continue
+    });
+  } else {
+    chrome.tabs.query({
+      highlighted: true,
+    }, function(tabs) { // Query returns active tab
+      active_tab = tabs[0];
+      chrome.tabs.sendMessage(tabs[0].id, {
+        action: 'next_page',
+      }, function(response) {
+        // # TODO Continue
+      });
+    });
+  }
+
+}
+
+function startBulkExtract(count) {
+  bulk_extracting = true;
+  bulk_cap = count;
+  messageInjectBulk();
 }
 
 
@@ -473,6 +560,43 @@ function append_to_cart(new_data) {
   });
 }
 
+function appendBulkCart(new_data) {
+  // bulk cart held in global
+  var old_cart, all_cart, unique_cart;
+  try {
+    old_cart = bulk_cart_master;
+    all_cart = old_cart.concat(new_data);
+    unique_cart = [];
+    $.each(all_cart, function(i, el) {
+      if ($.inArray(el, unique_cart) === -1) unique_cart.push(el);
+    });
+    bulk_cart_master = unique_cart;
+    bulkMasterSwitch();
+  } catch (e) {
+    console.log(e);
+    messagePopup({
+      action: 'cart max'
+    });
+    console.log(e);
+    bulk_extracting = false;
+  }
+  messagePopup({
+    action: 'prune_results',
+    count: unique_cart.length - old_cart.length
+  });
+}
+
+function bulkMasterSwitch(){
+  if (bulk_cart_master.length < bulk_cap) {
+    bulkCartReady();
+  } else {
+    messagePopup({
+      action: 'flash cart'
+    });
+    bulk_extracting = false;
+  }
+}
+
 function pull_from_cart(callback) {
   var pulled;
   var new_cart_count;
@@ -662,6 +786,58 @@ function prunePages(request, user_token) {
     'data': request
   });
   xhttp.send(data);
+}
+
+function pruneForBulk(request, user_token) {
+  var server_says;
+  var xhttp;
+  var user_request_len = request.length;
+  xhttp = new XMLHttpRequest();
+  xhttp.onreadystatechange = function() {
+    if (this.readyState === 4 && this.status === 201) {
+      var urls_to_request = JSON.parse(this.responseText).data;
+      if (urls_to_request.length > 0 && urls_to_request.length !== user_request_len) {
+        // Response is from server with non-duplicate Urls
+        // Save them to cart
+        appendBulkCart(urls_to_request);
+        server_says = "You added " + user_request_len.toString() + " to cart. " + urls_to_request.length.toString() + " items will be extracted. Remainder are present on server, added to your active file.";
+      } else if (urls_to_request.length === 0) {
+        server_says = "You added " + user_request_len.toString() + " to cart. All are present on server and are now in your active file.";
+        messagePopup({
+          action: 'flash cart'
+        });
+        appendBulkCart(urls_to_request);
+      } else if (urls_to_request.length > 0 && urls_to_request.length === user_request_len) {
+        appendBulkCart(urls_to_request);
+        server_says = "You added " + user_request_len.toString() + " to cart. None present on server.";
+      } else {
+        appendBulkCart(urls_to_request);
+        server_says = "You added " + user_request_len.toString() + " to cart.";
+      }
+      save_new_message(server_says);
+
+
+    } else if (this.status === 400 || this.status === 401 || this.status === 404) {
+      server_says = "Server rejected pruning request";
+      save_new_message(server_says);
+      show_abnormal_auth();
+    } else if (this.status === 500) {
+      server_says = "Server error occured during pruning request";
+      messagePopup({
+        action: 'flash cart error'
+      });
+      save_new_message(server_says);
+    }
+  };
+  xhttp.open("POST", prune_url, true);
+  xhttp.setRequestHeader("Content-type", "application/json");
+  xhttp.setRequestHeader('Api-Key', token);
+
+  var data = JSON.stringify({
+    'data': request
+  });
+  xhttp.send(data);
+
 }
 
 function paceExtract() {

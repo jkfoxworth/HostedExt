@@ -4,6 +4,7 @@ var profiles_on_deck = [];
 var port_to_background = null;
 var port_from_background = null;
 var radial = null;
+var allitems = null;
 
 // Run Immediately on Load Popup.js
 (function() {
@@ -108,6 +109,13 @@ function setupBackgroundPort() {
         port_to_background = null;
         port_from_background = null;
     });
+}
+
+function bulkExtract(){
+  messageBackground({
+    action: 'bulk extract',
+    count: allitems
+  });
 }
 
 
@@ -284,19 +292,28 @@ function show_messages(messages) {
     }
 }
 
-function updateItemsAvailable(count) {
-    $('#add_to_cart_count').prop('textContent', count);
+function updateItemsAvailable(SearchResults) {
+    $('#add_to_cart_count').prop('textContent', SearchResults.results.length.toString());
     unhide_element('#add_to_cart_count');
     $('#add_to_cart').on('click', makeExtractList);
+    $('#all_items_count').prop('textContent', SearchResults.all_items.toString());
+    unhide_element('#all_items_count');
+    $('#all_items').on('click', bulkExtract);
 }
 
 function styleResults(SearchResults) {
     // Show number in badge
     try {
-        updateItemsAvailable(SearchResults.length.toString());
+        updateItemsAvailable(SearchResults);
     } catch (e) {
-        updateItemsAvailable('0');
+        $("#add_to_cart_count").prop('textContent', '0');
+        unhide_element('#add_to_cart_count');
+        $('#add_to_cart').on('click', makeExtractList);
+        $('#all_items_count').prop('textContent', '0');
+        $('#all_items').on('click', bulkExtract);
     }
+    // Set global
+    allitems = SearchResults.all_items;
     // Clear profiles on deck
     profiles_on_deck = [];
     for (var i = 0; i < SearchResults.length; i++) {
