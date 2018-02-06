@@ -141,6 +141,7 @@ function show_login() {
 function show_action() {
     setupBackgroundPort();
     unhide_element('#actions');
+    unhide_element('#active_file_header');
     $('#logout_button').on('click', doLogout);
     $('#select_button_dropdown').on('click', requestResults);
     $('#start_extract').on('click', signalStartExtract);
@@ -172,6 +173,7 @@ function showAllowance(activity) {
         radial = initRadial(".cartvis", activity.allowance_remain, activity.allowance);
         unhide_element('#d3div');
     }
+    $('#active_file_name').prop('textContent', activity.active_file_name);
 }
 
 function update_cart_qty(new_qty) {
@@ -225,6 +227,7 @@ function new_login() {
 
 function new_logout() {
     hide_element('#actions');
+    hide_element('#active_file_header');
     hide_element('#d3div');
     show_login();
 }
