@@ -12,14 +12,16 @@ var extracting_active = false;
 var token = null;
 var messages = [];
 var user_activity = null;
+var active_file = null;
 
 function Activity(borrowed, new_records, allowance, allowance_remain,
-  allowance_reset) {
+  allowance_reset, active_file_name) {
   this.borrowed = borrowed;
   this.new_records = new_records;
   this.allowance = allowance;
   this.allowance_remain = allowance_remain;
   this.allowance_reset = allowance_reset;
+  this.active_file_name = active_file_name;
 }
 
 /*
@@ -77,6 +79,7 @@ chrome.runtime.onConnect.addListener(function(port) {
         case 'logout':
           token = null;
           user_activity = null;
+          active_file = null;
           break;
         case 'need activity':
           if (user_activity) {
@@ -85,6 +88,9 @@ chrome.runtime.onConnect.addListener(function(port) {
               data: user_activity
             });
           }
+          break;
+        case 'refresh active file':
+          getActivity();
           break;
         case 'extract_signal':
           switch (msg.content) {
@@ -257,10 +263,11 @@ function getActivity() {
       var json_data = JSON.stringify(data);
       var jd = JSON.parse(json_data).activity;
       user_activity = new Activity(jd.borrow, jd.new, jd.allowance, jd.allowance_remain,
-        jd.allowance_reset);
+        jd.allowance_reset, jd.active_file);
+      active_file = jd.active_file;
       messagePopup({
         action: 'activity request',
-        data: user_activity
+        data: user_activity,
       });
     },
     error: function(data) {
@@ -268,6 +275,10 @@ function getActivity() {
     }
 
   });
+}
+
+function getActiveFile(){
+
 }
 
 

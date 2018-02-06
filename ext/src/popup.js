@@ -60,6 +60,7 @@ var radial = null;
                         break;
                     case 'activity request':
                         showAllowance(msg.data);
+                        flashActiveFile(msg.data.active_file_name);
                         break;
                     case 'cart max':
                       flashCartError();
@@ -141,6 +142,9 @@ function show_login() {
 function show_action() {
     setupBackgroundPort();
     unhide_element('#actions');
+    unhide_element('#active_file_header');
+    $('[data-toggle="tooltip"]').tooltip();
+    $('#active_file_name').on('click', refreshActiveFile);
     $('#logout_button').on('click', doLogout);
     $('#select_button_dropdown').on('click', requestResults);
     $('#start_extract').on('click', signalStartExtract);
@@ -172,6 +176,21 @@ function showAllowance(activity) {
         radial = initRadial(".cartvis", activity.allowance_remain, activity.allowance);
         unhide_element('#d3div');
     }
+}
+
+function flashActiveFile(fn){
+  $active_file = $('#active_file_name');
+  $active_file.prop('textContent', fn);
+  $active_file.addClass('glow');
+  setTimeout(function() {
+      $active_file.removeClass('glow');
+  }, 3000);
+}
+
+function refreshActiveFile(){
+  messageBackground({
+    action: 'refresh active file'
+  });
 }
 
 function update_cart_qty(new_qty) {
@@ -225,6 +244,7 @@ function new_login() {
 
 function new_logout() {
     hide_element('#actions');
+    hide_element('#active_file_header');
     hide_element('#d3div');
     show_login();
 }
