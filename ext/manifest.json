@@ -2,7 +2,7 @@
 "update_url": "https://clients2.google.com/service/update2/crx",
 
   "name": "Hermes",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "manifest_version": 2,
   "description": "Hermes",
   "homepage_url": "http://estasney1.pythonanywhere.com",

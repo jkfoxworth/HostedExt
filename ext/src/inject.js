@@ -31,10 +31,24 @@ function SearchResult(fullName, profile_url, job_title_employer) {
             return stripped_text.split(' at ')[1];
         }
     };
+    try {
     this.fullName = this.trim_name(fullName);
+  } catch (e) {
+    this.fullName = '';
+  }
     this.profile_url = profile_url;
-    this.job_title = this.parse_el(job_title_employer, 'title');
+    try {
+        this.job_title = this.parse_el(job_title_employer, 'title');
+    } catch (e) {
+        this.job_title = '';
+    }
+    try {
     this.employer = this.parse_el(job_title_employer, 'employer');
+  } catch (e) {
+    this.employer = '';
+  }
+
+
 }
 
 // Function for parsing page results from search page
