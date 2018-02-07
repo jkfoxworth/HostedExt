@@ -112,6 +112,7 @@ chrome.runtime.onConnect.addListener(function(port) {
             case 'stop_extract':
               extracting_active = false;
               save_new_message("Extract Paused");
+              active_tab = null;
               break;
             case 'clear_extract':
               store_cart(); // calling with params effectively clears cart
@@ -537,6 +538,7 @@ function startPattern(raw) {
   } catch (e) {
     console.log(e);
     extracting_active = false;
+    active_tab = null;
   }
 }
 
@@ -552,6 +554,7 @@ function finishPattern(raw, start_code) {
   } catch (e) {
     console.log(e);
     extracting_active = false;
+    active_tab = null;
   }
 }
 
@@ -566,6 +569,7 @@ function startJSON(raw, start_code, end_code) {
   } catch (e) {
     console.log(e);
     extracting_active = false;
+    active_tab = null;
   }
 }
 
@@ -579,6 +583,7 @@ function finishJSON(code, counter, urls) {
   } catch (e) {
     console.log(e);
     extracting_active = false;
+    active_tab = null;
   }
 }
 
@@ -601,6 +606,7 @@ function filter_json(callback, code) {
   } catch (e) {
     console.log(e);
     extracting_active = false;
+    active_tab = null;
   }
 }
 
@@ -673,6 +679,8 @@ function paceExtract() {
   }
   if (extracting_active) {
     smartWait();
+  } else {
+    active_tab = null;
   }
 }
 
