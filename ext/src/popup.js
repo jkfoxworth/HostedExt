@@ -21,6 +21,8 @@ var radial = null;
       show_action();
     } else if (response.action === 'show actions no extract') {
       show_action('no extract');
+    } else if (response.action === 'show actions extract active') {
+      show_action('extract active');
     } else if (response.action === 'show login error') {
       show_login_error();
     }
@@ -75,6 +77,15 @@ var radial = null;
             break;
           case 'show allowance warning':
             warnAllowance();
+            break;
+          case 'show cart error':
+            warnCart();
+            break;
+          case 'extraction active':
+            cartActive();
+            break;
+          case 'extraction pause':
+            cartDefault();
             break;
         }
       });
@@ -157,6 +168,8 @@ function show_action() {
   if (arguments[0]) { // if argument passed
     if (arguments[0] === 'no extract') {
       disable_element('#extract_button_dropdown');
+    } else if (arguments[0] === 'extract active') {
+      cartActive();
     }
   }
   setupBackgroundPort();
@@ -317,6 +330,37 @@ function show_messages(messages) {
     console.log(e);
   }
 }
+
+function warnCart(){
+  $cbtn = $('#shopping-car-btn');
+  $cbtn.removeClass('cbtn-default');
+  $cbtn.removeClass('cbtn-active');
+  $cbtn.addClass('cbtn-warn');
+  $cbtn.prop('data-toggle', 'tooltip');
+  $cbtn.prop('title', 'An Error Occured. Try restarting our login again.');
+  $cbtn.tooltip();
+}
+
+function cartActive(){
+  $cbtn = $('#shopping-car-btn');
+  $cbtn.removeClass('cbtn-warn');
+  $cbtn.removeClass('cbtn-default');
+  $cbtn.addClass('cbtn-active');
+  $cbtn.prop('data-toggle', 'tooltip');
+  $cbtn.prop('title', 'Your extraction is running');
+  $cbtn.tooltip();
+}
+
+function cartDefault(){
+  $cbtn = $('#shopping-car-btn');
+  $cbtn.removeClass('cbtn-warn');
+  $cbtn.removeClass('cbtn-active');
+  $cbtn.addClass('cbtn-default');
+  $cbtn.prop('data-toggle', 'tooltip');
+  $cbtn.prop('title', 'No Extraction Running');
+  $cbtn.tooltip();
+}
+
 
 function warnAllowance() {
   disable_element('#extract_button_dropdown');

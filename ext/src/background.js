@@ -96,6 +96,9 @@ chrome.runtime.onConnect.addListener(function(port) {
           switch (msg.content) {
             case 'start_extract':
               extracting_active = true;
+              messagePopup({
+                action: 'extraction active'
+              });
               save_new_message("Starting Extract");
               if (active_tab) { // paceExtract has timeout. get active tab now
                 paceExtract();
@@ -111,6 +114,9 @@ chrome.runtime.onConnect.addListener(function(port) {
               break;
             case 'stop_extract':
               extracting_active = false;
+              messagePopup({
+                action: 'extraction pause'
+              });
               save_new_message("Extract Paused");
               active_tab = null;
               break;
@@ -119,6 +125,10 @@ chrome.runtime.onConnect.addListener(function(port) {
               save_new_message("Cart emptied");
               messagePopup({
                 action: 'cart cleared'
+              });
+              extracting_active = false;
+              messagePopup({
+                action: 'extraction pause'
               });
               break;
           }
@@ -291,9 +301,16 @@ function show_action_page(callback) {
         action: 'show actions no extract'
       });
     } else {
+      if (extracting_active === true) {
+      callback({
+        action: 'show actions extract active'
+      });
+    } else {
       callback({
         action: 'show actions'
       });
+    }
+
     }
   } else {
   try {
@@ -448,6 +465,9 @@ function store_cart(cart) {
     chrome.storage.sync.set({
       'hermes_cart': [],
     });
+    messagePopup({
+      action: 'extraction pause'
+    });
   }
 }
 
@@ -503,6 +523,9 @@ function pull_from_cart(callback) {
       new_cart_count = cart.length;
     } catch (e) { // Catches if hermes_cart is empty
       extracting_active = false;
+      messagePopup({
+        action: 'extraction pause'
+      });
       save_new_message("Cart empty");
       pulled = null;
       new_cart_count = 0;
@@ -557,6 +580,9 @@ function startPattern(raw) {
   } catch (e) {
     console.log(e);
     extracting_active = false;
+    messagePopup({
+      action: 'show cart error'
+    });
     active_tab = null;
   }
 }
@@ -573,6 +599,9 @@ function finishPattern(raw, start_code) {
   } catch (e) {
     console.log(e);
     extracting_active = false;
+    messagePopup({
+      action: 'show cart error'
+    });
     active_tab = null;
   }
 }
@@ -588,6 +617,9 @@ function startJSON(raw, start_code, end_code) {
   } catch (e) {
     console.log(e);
     extracting_active = false;
+    messagePopup({
+      action: 'show cart error'
+    });
     active_tab = null;
   }
 }
@@ -602,6 +634,9 @@ function finishJSON(code, counter, urls) {
   } catch (e) {
     console.log(e);
     extracting_active = false;
+    messagePopup({
+      action: 'show cart error'
+    });
     active_tab = null;
   }
 }
@@ -625,6 +660,9 @@ function filter_json(callback, code) {
   } catch (e) {
     console.log(e);
     extracting_active = false;
+    messagePopup({
+      action: 'show cart error'
+    });
     active_tab = null;
   }
 }
