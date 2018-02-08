@@ -278,13 +278,24 @@ function getActivity() {
   });
 }
 
-function getActiveFile(){
+function getActiveFile() {
 
 }
 
 
 // User is logged in, display action buttons
 function show_action_page(callback) {
+  if (user_activity) {
+    if (user_activity.allowance_remain === 0) {
+      callback({
+        action: 'show actions no extract'
+      });
+    } else {
+      callback({
+        action: 'show actions'
+      });
+    }
+  } else {
   try {
     callback({
       action: 'show actions'
@@ -292,6 +303,7 @@ function show_action_page(callback) {
   } catch (e) {
     console.log(e);
   }
+}
 }
 
 function show_login(callback) {
@@ -338,6 +350,13 @@ function show_abnormal_auth() {
   } catch (e) {
     console.log(e);
   }
+}
+
+function show_allowance_warning() {
+  token = null;
+  messagePopup({
+    action: 'show allowance warning'
+  });
 }
 
 
@@ -678,7 +697,14 @@ function paceExtract() {
     }, wait_time);
   }
   if (extracting_active) {
-    smartWait();
+    if (user_activity.allowance > 0) {
+      smartWait();
+    } else {
+      extracting_active = false;
+      active_tab = null;
+      show_allowance_warning();
+    }
+
   } else {
     active_tab = null;
   }
@@ -735,6 +761,9 @@ function postData(filtered_ajax, user_token) {
       server_says = "Server rejected posting to profile";
       save_new_message(server_says);
       show_abnormal_auth();
+    } else if (this.status === 429) {
+      server_says = "24 Hour limit reached. Please try again later.";
+      show_allowance_warning();
     } else if (this.status === 500) {
       server_says = "Server error while posting profile";
       // TODO add back to queue

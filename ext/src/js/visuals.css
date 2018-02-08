@@ -27,10 +27,33 @@
   font-size: 20px;
 }
 
-.tokens .rbc-center-text-line0 {
-  font-size: 95px;
+.flash-warn {
+  -moz-animation: flash-warn 0.6s 5 alternate;
+  -webkit-animation: flash-warn 0.6s 5 alternate;
+  animation: flash-warn 0.6s 5 alternate;
 }
 
-.tokens .rbc-center-text-line1 {
-  font-size: 20px;
+@-moz-keyframes flash-warn {
+  0% {
+    fill: #ff2f2f;
+  }
+  100% {
+    fill: #ff2f2f00;
+  }
+}
+@-webkit-keyframes flash-warn {
+  0% {
+    fill: #ff2f2f;
+  }
+  100% {
+    fill: #ff2f2f00;
+  }
+}
+@keyframes flash-warn {
+  0% {
+    fill: #ff2f2f;
+  }
+  100% {
+    fill: #ff2f2f00;
+  }
 }

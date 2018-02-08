@@ -19,6 +19,8 @@ var radial = null;
             show_login();
         } else if (response.action === 'show actions') {
             show_action();
+        } else if (response.action === 'show actions no extract') {
+            show_action('no extract');
         } else if (response.action === 'show login error') {
             show_login_error();
         }
@@ -70,6 +72,10 @@ var radial = null;
                       break;
                     case 'flash cart error':
                       flashCartError();
+                      break;
+                    case 'show allowance warning':
+                      warnAllowance();
+                      break;
                 }
             });
         }
@@ -131,6 +137,14 @@ function hide_element(selector) {
     }
 }
 
+function disable_element(selector) {
+  var current_class = $(selector).prop('class');
+  if (current_class.indexOf("disabled") === -1) {
+    var new_class = current_class + " disabled";
+    $(selector).prop('class', new_class);
+  }
+}
+
 function show_login() {
     setupBackgroundPort();
     $('#login_button').on('click', doLogin);
@@ -140,6 +154,12 @@ function show_login() {
 }
 
 function show_action() {
+  if (arguments[0]) { // if argument passed
+    if (arguments[0] === 'no extract') {
+      disable_element('#extract_button_dropdown');
+      flashAllowance();
+    }
+  }
     setupBackgroundPort();
     unhide_element('#actions');
     unhide_element('#active_file_header');
@@ -221,6 +241,14 @@ function flashCart(){
   }, 3000);
 }
 
+function flashAllowance(){
+  $allowance_text = $('#d3div > div > svg > g > text');
+  $allowance_text.prop('class').baseVal = 'rbc-center-text flash-warn';
+  setTimeout(function() {
+      $allowance_text.prop('class').baseVal = 'rbc-center-text';
+  }, 3000);
+}
+
 function flashCartError(){
   $cart = $('#shopping-cart-btn .badge');
   $cart.addClass('flash-error');
@@ -282,6 +310,11 @@ function show_messages(messages) {
         $('#collapseMessages').append(no_messages);
         console.log(e);
     }
+}
+
+function warnAllowance(){
+  disable_element('#extract_button_dropdown');
+  flashAllowance();
 }
 
 function updateItemsAvailable(count) {
