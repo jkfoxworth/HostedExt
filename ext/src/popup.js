@@ -79,7 +79,7 @@ var radial = null;
             warnAllowance();
             break;
           case 'show cart error':
-            warnCart();
+            cartWarn();
             break;
           case 'extraction active':
             cartActive();
@@ -331,8 +331,8 @@ function show_messages(messages) {
   }
 }
 
-function warnCart(){
-  $cbtn = $('#shopping-car-btn');
+function cartWarn(){
+  var $cbtn = $('#shopping-cart-btn');
   $cbtn.removeClass('cbtn-default');
   $cbtn.removeClass('cbtn-active');
   $cbtn.addClass('cbtn-warn');
@@ -342,7 +342,7 @@ function warnCart(){
 }
 
 function cartActive(){
-  $cbtn = $('#shopping-car-btn');
+  var $cbtn = $('#shopping-cart-btn');
   $cbtn.removeClass('cbtn-warn');
   $cbtn.removeClass('cbtn-default');
   $cbtn.addClass('cbtn-active');
@@ -352,7 +352,7 @@ function cartActive(){
 }
 
 function cartDefault(){
-  $cbtn = $('#shopping-car-btn');
+  var $cbtn = $('#shopping-cart-btn');
   $cbtn.removeClass('cbtn-warn');
   $cbtn.removeClass('cbtn-active');
   $cbtn.addClass('cbtn-default');
