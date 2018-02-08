@@ -35,7 +35,7 @@ body {
 }
 
 .cbtn-warn, .cbtn-warn:focus {
-  background-color: #818182;
+  background-color: #ff2e2e;
   color: white;
   -moz-transition: box-shadow 0.1s ease-out;
   -o-transition: box-shadow 0.1s ease-out;
@@ -44,14 +44,14 @@ body {
 }
 
 .cbtn-warn:hover, .cbtn-warn:focus:hover {
-  background-color: #668f3d;
+  background-color: #dfff2f;
   -moz-box-shadow: inset 0 0 0 5px #4d6b2e;
   -webkit-box-shadow: inset 0 0 0 5px #4d6b2e;
   box-shadow: inset 0 0 0 5px #4d6b2e;
   color: white;
 }
 .cbtn-warn:active, .cbtn-warn:focus:active {
-  background-color: #597d36;
+  background-color: #dfff2f;
 }
 
 .cbtn-default, .cbtn-default:focus {
@@ -64,14 +64,14 @@ body {
 }
 
 .cbtn-default:hover, .cbtn-default:focus:hover {
-  background-color: #668f3d;
+  background-color: #4d4d4e;
   -moz-box-shadow: inset 0 0 0 5px #4d6b2e;
   -webkit-box-shadow: inset 0 0 0 5px #4d6b2e;
   box-shadow: inset 0 0 0 5px #4d6b2e;
   color: white;
 }
 .cbtn-default:active, .cbtn-default:focus:active {
-  background-color: #597d36;
+  background-color: #4d4d4e;
 }
 
 
