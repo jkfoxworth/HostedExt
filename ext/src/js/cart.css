@@ -14,7 +14,7 @@ body {
   color: #668f3d;
 }
 
-.cbtn-default, .cbtn-default:focus {
+.cbtn-active, .cbtn-active:focus {
   background-color: #668f3d;
   color: white;
   -moz-transition: box-shadow 0.1s ease-out;
@@ -22,16 +22,58 @@ body {
   -webkit-transition: box-shadow 0.1s ease-out;
   transition: box-shadow 0.1s ease-out;
 }
-.cbtn-default:hover, .cbtn-default:focus:hover {
+
+.cbtn-active:hover, .cbtn-active:focus:hover {
   background-color: #668f3d;
   -moz-box-shadow: inset 0 0 0 5px #4d6b2e;
   -webkit-box-shadow: inset 0 0 0 5px #4d6b2e;
   box-shadow: inset 0 0 0 5px #4d6b2e;
   color: white;
 }
-.cbtn-default:active, .cbtn-default:focus:active {
+.cbtn-active:active, .cbtn-active:focus:active {
   background-color: #597d36;
 }
+
+.cbtn-warn, .cbtn-warn:focus {
+  background-color: #ff2e2e;
+  color: white;
+  -moz-transition: box-shadow 0.1s ease-out;
+  -o-transition: box-shadow 0.1s ease-out;
+  -webkit-transition: box-shadow 0.1s ease-out;
+  transition: box-shadow 0.1s ease-out;
+}
+
+.cbtn-warn:hover, .cbtn-warn:focus:hover {
+  background-color: #dfff2f;
+  -moz-box-shadow: inset 0 0 0 5px #4d6b2e;
+  -webkit-box-shadow: inset 0 0 0 5px #4d6b2e;
+  box-shadow: inset 0 0 0 5px #4d6b2e;
+  color: white;
+}
+.cbtn-warn:active, .cbtn-warn:focus:active {
+  background-color: #dfff2f;
+}
+
+.cbtn-default, .cbtn-default:focus {
+  background-color: #818182;
+  color: white;
+  -moz-transition: box-shadow 0.1s ease-out;
+  -o-transition: box-shadow 0.1s ease-out;
+  -webkit-transition: box-shadow 0.1s ease-out;
+  transition: box-shadow 0.1s ease-out;
+}
+
+.cbtn-default:hover, .cbtn-default:focus:hover {
+  background-color: #4d4d4e;
+  -moz-box-shadow: inset 0 0 0 5px #4d6b2e;
+  -webkit-box-shadow: inset 0 0 0 5px #4d6b2e;
+  box-shadow: inset 0 0 0 5px #4d6b2e;
+  color: white;
+}
+.cbtn-default:active, .cbtn-default:focus:active {
+  background-color: #4d4d4e;
+}
+
 
 .shake {
   -moz-animation: shake 0.3s 2 alternate;
