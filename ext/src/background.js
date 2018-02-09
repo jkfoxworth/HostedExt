@@ -539,7 +539,10 @@ function pull_from_cart(callback) {
       return;
     }
     // pulled is passed to callback
-    callback(pulled);
+    if (pulled) {
+        callback(pulled);
+    }
+
     // put cart back in modified state
     store_cart(cart);
     try {
@@ -550,7 +553,7 @@ function pull_from_cart(callback) {
     } catch (e) {
       console.log(e);
     }
-    save_new_message("Items remaining in cart: " + new_cart_count);
+
   });
 }
 // Event Listeners
