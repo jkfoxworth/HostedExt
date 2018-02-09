@@ -67,24 +67,28 @@ var radial = null;
             flashActiveFile(msg.data.active_file_name);
             break;
           case 'cart max':
+            checkCartSize(quietSetMasterCartSize);
             flashCartError();
             break;
           case 'flash cart':
             flashCart();
             break;
           case 'flash cart error':
+            checkCartSize(quietSetMasterCartSize);
             flashCartError();
             break;
           case 'show allowance warning':
             warnAllowance();
             break;
           case 'show cart error':
+            checkCartSize(quietSetMasterCartSize);
             cartWarn();
             break;
           case 'extraction active':
             cartActive();
             break;
           case 'extraction pause':
+            checkCartSize(quietSetMasterCartSize);
             cartDefault();
             break;
         }
@@ -337,7 +341,7 @@ function cartWarn(){
   $cbtn.removeClass('cbtn-active');
   $cbtn.addClass('cbtn-warn');
   $cbtn.prop('data-toggle', 'tooltip');
-  $cbtn.prop('title', 'An Error Occured. Try restarting our login again.');
+  $cbtn.prop('title', 'An Error Occured. Try restarting your extraction or logout of Hermes and try again.');
   $cbtn.tooltip();
 }
 

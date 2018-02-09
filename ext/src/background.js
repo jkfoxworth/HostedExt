@@ -13,6 +13,8 @@ var token = null;
 var messages = [];
 var user_activity = null;
 var active_file = null;
+var pulled = null; // Holds one target pulled from cart. On success, clear, else append back to cart
+
 
 function Activity(borrowed, new_records, allowance, allowance_remain,
   allowance_reset, active_file_name) {
@@ -302,25 +304,25 @@ function show_action_page(callback) {
       });
     } else {
       if (extracting_active === true) {
-      callback({
-        action: 'show actions extract active'
-      });
-    } else {
-      callback({
-        action: 'show actions'
-      });
-    }
+        callback({
+          action: 'show actions extract active'
+        });
+      } else {
+        callback({
+          action: 'show actions'
+        });
+      }
 
     }
   } else {
-  try {
-    callback({
-      action: 'show actions'
-    });
-  } catch (e) {
-    console.log(e);
+    try {
+      callback({
+        action: 'show actions'
+      });
+    } catch (e) {
+      console.log(e);
+    }
   }
-}
 }
 
 function show_login(callback) {
@@ -475,9 +477,15 @@ function store_cart(cart) {
 function append_to_cart(new_data) {
   // get 'hermes_cart' and once complete run anon function
   chrome.storage.sync.get('hermes_cart', function(items) {
+    var all_cart;
     try {
       var old_cart = items.hermes_cart;
-      var all_cart = old_cart.concat(new_data);
+      if (new_data instanceof Array) {
+        all_cart = old_cart.concat(new_data);
+      } else { // Occurs when appending error to cart.
+        all_cart = old_cart.push(new_data);
+      }
+
       var unique_cart = [];
       $.each(all_cart, function(i, el) {
         if ($.inArray(el, unique_cart) === -1) unique_cart.push(el);
@@ -514,7 +522,6 @@ function append_to_cart(new_data) {
 }
 
 function pull_from_cart(callback) {
-  var pulled;
   var new_cart_count;
   chrome.storage.sync.get('hermes_cart', function(items) {
     var cart = items.hermes_cart;
@@ -532,7 +539,15 @@ function pull_from_cart(callback) {
       return;
     }
     // pulled is passed to callback
-    callback(pulled);
+    if (pulled) {
+        callback(pulled);
+    } else {
+      extracting_active = false;
+      messagePopup({
+        action: 'extraction pause'
+      });
+    }
+
     // put cart back in modified state
     store_cart(cart);
     try {
@@ -543,7 +558,7 @@ function pull_from_cart(callback) {
     } catch (e) {
       console.log(e);
     }
-    save_new_message("Items remaining in cart: " + new_cart_count);
+
   });
 }
 // Event Listeners
@@ -584,6 +599,8 @@ function startPattern(raw) {
       action: 'show cart error'
     });
     active_tab = null;
+    append_to_cart(pulled);
+    save_new_message(pulled + " caused an error. Extraction paused");
   }
 }
 
@@ -603,6 +620,8 @@ function finishPattern(raw, start_code) {
       action: 'show cart error'
     });
     active_tab = null;
+    append_to_cart(pulled);
+    save_new_message(pulled + " caused an error. Extraction paused");
   }
 }
 
@@ -621,6 +640,8 @@ function startJSON(raw, start_code, end_code) {
       action: 'show cart error'
     });
     active_tab = null;
+    append_to_cart(pulled);
+    save_new_message(pulled + " caused an error. Extraction paused");
   }
 }
 
@@ -638,6 +659,8 @@ function finishJSON(code, counter, urls) {
       action: 'show cart error'
     });
     active_tab = null;
+    append_to_cart(pulled);
+    save_new_message(pulled + " caused an error. Extraction paused");
   }
 }
 
@@ -664,6 +687,7 @@ function filter_json(callback, code) {
       action: 'show cart error'
     });
     active_tab = null;
+    append_to_cart(pulled);
   }
 }
 
@@ -754,7 +778,11 @@ function doExtract(target) {
       action: 'get_page',
       target: target
     }, function(response) {
-      startPattern(response.data); // Starts cascade, ends with postData
+      try {
+        startPattern(response.data); // Starts cascade, ends with postData
+      } catch (e) {
+        append_to_cart(target);
+      }
     });
   } else {
     chrome.tabs.query({
@@ -766,7 +794,11 @@ function doExtract(target) {
         action: 'get_page',
         target: target
       }, function(response) {
-        startPattern(response.data); // Starts cascade, ends with postData
+        try {
+          startPattern(response.data); // Starts cascade, ends with postData
+        } catch (e) {
+          append_to_cart(target);
+        }
       });
     });
   }
@@ -784,6 +816,7 @@ function postData(filtered_ajax, user_token) {
         action: 'shake cart',
         count: -1
       };
+      pulled = null;
       var shake_radial_message = {
         action: 'shake radial',
         count: user_activity.allowance_remain
