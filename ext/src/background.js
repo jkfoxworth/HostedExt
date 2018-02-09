@@ -541,6 +541,11 @@ function pull_from_cart(callback) {
     // pulled is passed to callback
     if (pulled) {
         callback(pulled);
+    } else {
+      extracting_active = false;
+      messagePopup({
+        action: 'extraction pause'
+      });
     }
 
     // put cart back in modified state
