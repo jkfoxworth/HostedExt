@@ -592,6 +592,7 @@ function startPattern(raw) {
     });
     active_tab = null;
     append_to_cart(pulled);
+    save_new_message(pulled + " caused an error. Extraction paused");
   }
 }
 
@@ -612,6 +613,7 @@ function finishPattern(raw, start_code) {
     });
     active_tab = null;
     append_to_cart(pulled);
+    save_new_message(pulled + " caused an error. Extraction paused");
   }
 }
 
@@ -631,6 +633,7 @@ function startJSON(raw, start_code, end_code) {
     });
     active_tab = null;
     append_to_cart(pulled);
+    save_new_message(pulled + " caused an error. Extraction paused");
   }
 }
 
@@ -649,6 +652,7 @@ function finishJSON(code, counter, urls) {
     });
     active_tab = null;
     append_to_cart(pulled);
+    save_new_message(pulled + " caused an error. Extraction paused");
   }
 }
 
