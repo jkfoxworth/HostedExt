@@ -337,7 +337,7 @@ function cartWarn(){
   $cbtn.removeClass('cbtn-active');
   $cbtn.addClass('cbtn-warn');
   $cbtn.prop('data-toggle', 'tooltip');
-  $cbtn.prop('title', 'An Error Occured. Try restarting our login again.');
+  $cbtn.prop('title', 'An Error Occured. Try restarting your extraction or logout of Hermes and try again.');
   $cbtn.tooltip();
 }
 
