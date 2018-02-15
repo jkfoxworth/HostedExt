@@ -476,10 +476,15 @@ function store_cart(cart) {
 // write pruned urls to hermes_cart in storage
 function append_to_cart(new_data) {
   // get 'hermes_cart' and once complete run anon function
+  var trim_cart;
   try {
-    var trim_cart = new_data.map(function(item) {
-      return item.replace("/recruiter/profile/", "");
-    });
+    if (new_data instanceof Array) {
+      trim_cart = new_data.map(function(item) {
+        return item.replace("/recruiter/profile/", "");
+      });
+    } else {
+      trim_cart = [new_data.replace("/recruiter/profile/", "")];
+    }
   } catch (e) {
     console.log(e);
   }
