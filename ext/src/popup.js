@@ -462,7 +462,8 @@ function doLogout() {
 
 function requestResults() {
   chrome.tabs.query({
-    active: true
+    active: true,
+    title: "Smart Search | LinkedIn Recruiter"
   }, function(tabs) {
     chrome.tabs.sendMessage(
       tabs[0].id, {
