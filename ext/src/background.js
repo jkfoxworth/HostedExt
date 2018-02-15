@@ -476,14 +476,21 @@ function store_cart(cart) {
 // write pruned urls to hermes_cart in storage
 function append_to_cart(new_data) {
   // get 'hermes_cart' and once complete run anon function
+  try {
+    var trim_cart = new_data.map(function(item) {
+      return item.replace("/recruiter/profile/", "");
+    });
+  } catch (e) {
+    console.log(e);
+  }
   chrome.storage.sync.get('hermes_cart', function(items) {
     var all_cart;
     try {
       var old_cart = items.hermes_cart;
-      if (new_data instanceof Array) {
-        all_cart = old_cart.concat(new_data);
+      if (trim_cart instanceof Array) {
+        all_cart = old_cart.concat(trim_cart);
       } else { // Occurs when appending error to cart.
-        all_cart = old_cart.push(new_data);
+        all_cart = old_cart.push(trim_cart);
       }
 
       var unique_cart = [];
@@ -506,10 +513,10 @@ function append_to_cart(new_data) {
       console.log(e);
 
       try {
-        store_cart(new_data);
+        store_cart(trim_cart);
         messagePopup({
           action: 'prune_results',
-          count: new_data.length
+          count: trim_cart.length
         });
       } catch (e) {
         messagePopup({
@@ -527,6 +534,7 @@ function pull_from_cart(callback) {
     var cart = items.hermes_cart;
     try {
       pulled = cart.shift();
+      pulled = "/recruiter/profile/" + pulled;
       new_cart_count = cart.length;
     } catch (e) { // Catches if hermes_cart is empty
       extracting_active = false;
@@ -540,7 +548,7 @@ function pull_from_cart(callback) {
     }
     // pulled is passed to callback
     if (pulled) {
-        callback(pulled);
+      callback(pulled);
     } else {
       extracting_active = false;
       messagePopup({
