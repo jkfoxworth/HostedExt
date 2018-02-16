@@ -107,6 +107,7 @@ chrome.runtime.onConnect.addListener(function(port) {
               } else {
                 chrome.tabs.query({
                   highlighted: true,
+                  title: "*earch*"
 
                 }, function(tabs) { // Query returns active tab
                   active_tab = tabs[0];
@@ -800,7 +801,7 @@ function doExtract(target) {
   } else {
     chrome.tabs.query({
       highlighted: true,
-
+      title: "*earch*"
     }, function(tabs) { // Query returns active tab
       active_tab = tabs[0];
       chrome.tabs.sendMessage(tabs[0].id, {
