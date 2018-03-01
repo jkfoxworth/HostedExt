@@ -466,7 +466,7 @@ function store_cart(cart) {
   } else {
     extracting_active = false; // cart is empty no extracting
     chrome.storage.sync.set({
-      'hermes_cart': [],
+      'hermes_cart': null,
     });
     messagePopup({
       action: 'extraction pause'
