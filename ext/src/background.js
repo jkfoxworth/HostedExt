@@ -767,7 +767,7 @@ function prunePages(request, user_token) {
 
 function paceExtract() {
   function smartWait() {
-    var wait_time = getRandomInt(5, 10);
+    var wait_time = getRandomInt(3, 8);
     setTimeout(function() {
       pull_from_cart(doExtract);
     }, wait_time);
