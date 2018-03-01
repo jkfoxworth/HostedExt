@@ -538,11 +538,43 @@ function pull_from_cart(callback) {
   var new_cart_count;
   chrome.storage.sync.get('hermes_cart', function(items) {
     var cart = items.hermes_cart;
-    try {
-      pulled = cart.shift();
-      pulled = "/recruiter/profile/" + pulled;
-      new_cart_count = cart.length;
-    } catch (e) { // Catches if hermes_cart is empty
+    if (cart.length > 0) {
+      try {
+        pulled = cart.shift();
+        pulled = "/recruiter/profile/" + pulled;
+        new_cart_count = cart.length;
+      } catch (e) { // Catches if hermes_cart is empty
+        extracting_active = false;
+        messagePopup({
+          action: 'extraction pause'
+        });
+        save_new_message("Cart empty");
+        pulled = null;
+        new_cart_count = 0;
+        return;
+      }
+      // pulled is passed to callback
+      if (pulled) {
+        callback(pulled);
+      } else {
+        extracting_active = false;
+        messagePopup({
+          action: 'extraction pause'
+        });
+      }
+
+      // put cart back in modified state
+      store_cart(cart);
+      try {
+        messagePopup({
+          action: 'cart count',
+          count: new_cart_count
+        });
+      } catch (e) {
+        console.log(e);
+      }
+    } else {
+      store_cart();
       extracting_active = false;
       messagePopup({
         action: 'extraction pause'
@@ -550,31 +582,12 @@ function pull_from_cart(callback) {
       save_new_message("Cart empty");
       pulled = null;
       new_cart_count = 0;
-      return;
-    }
-    // pulled is passed to callback
-    if (pulled) {
-      callback(pulled);
-    } else {
-      extracting_active = false;
-      messagePopup({
-        action: 'extraction pause'
-      });
-    }
-
-    // put cart back in modified state
-    store_cart(cart);
-    try {
-      messagePopup({
-        action: 'cart count',
-        count: new_cart_count
-      });
-    } catch (e) {
-      console.log(e);
+      
     }
 
   });
 }
+
 // Event Listeners
 
 /*
