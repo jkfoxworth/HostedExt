@@ -411,9 +411,10 @@ function checkMessages() {
 
 function checkCartSize(callback) {
   chrome.storage.sync.get('hermes_cart', function(items) {
-    var cart_size = items.hermes_cart.length;
-    console.log("Cart size found is " + cart_size);
-    callback(cart_size);
+    var hermes_cart = items.hermes_cart;
+    console.log(hermes_cart.length);
+
+    callback(hermes_cart.length);
   });
 }
 
