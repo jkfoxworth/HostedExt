@@ -464,7 +464,8 @@ function doLogout() {
 function requestResults() {
   chrome.tabs.query({
     active: true,
-    title: "*earch*"
+    title: "*earch*",
+    url: "https://www.linkedin.com/recruiter/smartsearch*"
   }, function(tabs) {
     chrome.tabs.sendMessage(
       tabs[0].id, {
